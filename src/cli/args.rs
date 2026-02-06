@@ -16,6 +16,7 @@ use std::path::PathBuf;
   knowledge-index search \"TODO\" --type markdown
   knowledge-index list                List all indexed repositories
 ")]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Option<Commands>,

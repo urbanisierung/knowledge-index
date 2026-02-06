@@ -42,3 +42,11 @@
   - Progress bar for indexing operations
   - JSON output option for scripting
   - Color-coded output with owo-colors
+- **Code Quality: Zero-Warning Build**
+  - Updated `.github/copilot-instructions.md` with Build Requirements section
+  - Fixed all clippy warnings across the codebase:
+    - `src/db/mod.rs`: Fixed `trivially_copy_pass_by_ref`, `match_same_arms`, `too_many_arguments`
+    - `src/core/indexer.rs`: Fixed `cast_possible_truncation`, `cast_possible_wrap`
+    - `src/core/searcher.rs`: Removed no-op replace calls in `escape_fts_query`
+    - Added `#[allow(...)]` attributes for intentional patterns (CLI args, command functions)
+  - Project now builds with `cargo clippy -- -D warnings` and `cargo build --release` with zero warnings

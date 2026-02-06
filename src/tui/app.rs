@@ -12,6 +12,7 @@ pub enum AppMode {
 
 /// Status message level
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum StatusLevel {
     Info,
     Success,
@@ -20,6 +21,7 @@ pub enum StatusLevel {
 }
 
 /// Main application state
+#[allow(dead_code)]
 pub struct App {
     pub db: Database,
     pub config: Config,
@@ -100,6 +102,7 @@ impl App {
     }
 
     /// Clear status message
+    #[allow(dead_code)]
     pub fn clear_status(&mut self) {
         self.status_message = None;
     }

@@ -1,5 +1,5 @@
 use owo_colors::OwoColorize;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::cli::args::Args;
 use crate::db::Database;
@@ -7,11 +7,11 @@ use crate::error::{AppError, Result};
 
 use super::{confirm, print_success, use_colors};
 
-pub fn run(path: PathBuf, force: bool, args: &Args) -> Result<()> {
+pub fn run(path: &Path, force: bool, args: &Args) -> Result<()> {
     let colors = use_colors(args.no_color);
     let db = Database::open()?;
 
-    let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+    let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
 
     // Check if repository exists
     let repo = db

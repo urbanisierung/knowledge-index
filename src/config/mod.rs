@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::error::{AppError, Result};
 
 pub const APP_NAME: &str = "knowledge-index";
+#[allow(dead_code)]
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const CONFIG_FILE_NAME: &str = "config.toml";
 pub const DATABASE_FILE_NAME: &str = "index.db";

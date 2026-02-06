@@ -13,6 +13,7 @@ use crate::error::{AppError, Result};
 
 /// Progress information for indexing
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct IndexProgress {
     pub total_files: usize,
     pub processed_files: usize,
@@ -88,7 +89,7 @@ impl Indexer {
         self.db.update_repository_status(repo.id, RepoStatus::Indexing)?;
 
         // Collect files
-        let files = self.collect_files(&canonical)?;
+        let files = self.collect_files(&canonical);
         let total_files = files.len();
 
         // Progress tracking
@@ -135,10 +136,13 @@ impl Indexer {
         self.db.commit_batch()?;
 
         // Update repository stats
+        #[allow(clippy::cast_possible_wrap)]
         let file_count = (total_files - skipped.load(Ordering::Relaxed)) as i64;
+        #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
         self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
 
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         Ok(IndexResult {
             files_added: file_count as usize,
             files_updated: 0,
@@ -168,7 +172,7 @@ impl Indexer {
         let existing_paths: HashSet<PathBuf> = existing_map.keys().cloned().collect();
 
         // Collect current files
-        let current_files = self.collect_files(&repo.path)?;
+        let current_files = self.collect_files(&repo.path);
         let current_paths: HashSet<PathBuf> = current_files
             .iter()
             .filter_map(|p| p.strip_prefix(&repo.path).ok())
@@ -188,7 +192,9 @@ impl Indexer {
                 let existing = &existing_map[path];
                 let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
                 
-                if mtime > existing.last_modified_at || metadata.len() as i64 != existing.file_size_bytes {
+                #[allow(clippy::cast_possible_wrap)]
+                let file_size = metadata.len() as i64;
+                if mtime > existing.last_modified_at || file_size != existing.file_size_bytes {
                     modified.push(path.clone());
                 } else {
                     unchanged.push(path.clone());
@@ -250,7 +256,9 @@ impl Indexer {
         self.db.commit_batch()?;
 
         // Update repository stats
+        #[allow(clippy::cast_possible_wrap)]
         let file_count = (current_files.len() - skipped.load(Ordering::Relaxed)) as i64;
+        #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
         self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
 
@@ -266,7 +274,7 @@ impl Indexer {
     }
 
     /// Collect all indexable files in a directory
-    fn collect_files(&self, root: &Path) -> Result<Vec<PathBuf>> {
+    fn collect_files(&self, root: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
 
         let mut builder = WalkBuilder::new(root);
@@ -289,7 +297,7 @@ impl Indexer {
             }
         }
 
-        Ok(files)
+        files
     }
 
     /// Check if a file should be indexed
@@ -334,6 +342,7 @@ impl Indexer {
             return Err(AppError::Other("File too large".into()));
         }
 
+        #[allow(clippy::cast_possible_truncation)]
         let mut content = Vec::with_capacity(size as usize);
         file.read_to_end(&mut content)?;
 
@@ -360,6 +369,7 @@ impl Indexer {
         let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
 
         // Insert into database
+        #[allow(clippy::cast_possible_wrap)]
         self.db.insert_file(
             repo_id,
             relative,

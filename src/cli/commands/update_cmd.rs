@@ -10,6 +10,7 @@ use crate::error::{AppError, Result};
 
 use super::{print_success, print_warning, use_colors};
 
+#[allow(clippy::too_many_lines)]
 pub fn run(
     path: Option<PathBuf>,
     all: bool,

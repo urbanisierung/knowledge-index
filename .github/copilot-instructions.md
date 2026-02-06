@@ -12,6 +12,15 @@
 - **Formatting:** `rustfmt` with default rules — all code must be formatted before commit
 - Run `cargo fmt && cargo clippy -- -D warnings` before every commit
 
+### Build Requirements
+
+**Before finishing any task, the project MUST:**
+1. Build successfully with `cargo build --release`
+2. Have **zero warnings** during compilation
+3. Pass `cargo clippy -- -D warnings` with no errors
+
+If there are warnings, fix them before considering the task complete.
+
 ## Project Structure
 
 Follow standard Rust CLI project layout:

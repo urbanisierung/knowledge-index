@@ -26,6 +26,7 @@ impl Searcher {
     }
 
     /// Count total results
+    #[allow(dead_code)]
     pub fn count(
         &self,
         query: &str,
@@ -42,12 +43,6 @@ impl Searcher {
         if query.starts_with('"') && query.ends_with('"') {
             return query.to_string();
         }
-
-        // Handle boolean operators
-        let query = query
-            .replace(" AND ", " AND ")
-            .replace(" OR ", " OR ")
-            .replace(" NOT ", " NOT ");
 
         // Escape special characters except * (wildcard)
         let mut result = String::with_capacity(query.len());

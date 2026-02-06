@@ -50,6 +50,7 @@ pub fn print_success(msg: &str, use_colors: bool) {
 }
 
 /// Print error message
+#[allow(dead_code)]
 pub fn print_error(msg: &str, use_colors: bool) {
     if use_colors {
         eprintln!("{} {}", "✗".red(), msg);

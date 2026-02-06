@@ -7,6 +7,7 @@ use crate::error::Result;
 
 use super::use_colors;
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn run(
     query: String,
     repo: Option<String>,

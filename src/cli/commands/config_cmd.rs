@@ -6,6 +6,7 @@ use crate::error::Result;
 
 use super::use_colors;
 
+#[allow(clippy::too_many_lines)]
 pub fn run(key: Option<String>, value: Option<String>, reset: bool, args: &Args) -> Result<()> {
     let colors = use_colors(args.no_color);
     let config_path = Config::config_file_path()?;

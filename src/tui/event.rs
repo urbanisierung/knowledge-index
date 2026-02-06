@@ -6,11 +6,7 @@ use super::app::{App, AppMode};
 pub fn handle_key_event(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
     // Global keys
     match code {
-        KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => {
-            app.should_quit = true;
-            return;
-        }
-        KeyCode::Char('d') if modifiers.contains(KeyModifiers::CONTROL) => {
+        KeyCode::Char('c' | 'd') if modifiers.contains(KeyModifiers::CONTROL) => {
             app.should_quit = true;
             return;
         }

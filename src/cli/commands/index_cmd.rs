@@ -1,6 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::cli::args::Args;
 use crate::config::Config;
@@ -10,12 +10,13 @@ use crate::error::Result;
 
 use super::{print_success, print_warning, use_colors};
 
-pub fn run(path: PathBuf, name: Option<String>, args: &Args) -> Result<()> {
+#[allow(clippy::too_many_lines)]
+pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
     let colors = use_colors(args.no_color);
     let config = Config::load()?;
     let db = Database::open()?;
 
-    let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+    let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
 
     if !args.quiet && !args.json {
         if colors {

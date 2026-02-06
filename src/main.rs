@@ -37,7 +37,7 @@ fn run() -> Result<()> {
 
 fn run_command(cmd: Commands, args: &Args) -> Result<()> {
     match cmd {
-        Commands::Index { path, name } => commands::index::run(path, name, args),
+        Commands::Index { path, name } => commands::index::run(&path, name, args),
         Commands::Search {
             query,
             repo,
@@ -46,7 +46,7 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
         } => commands::search::run(query, repo, file_type, limit, args),
         Commands::List {} => commands::list::run(args),
         Commands::Update { path, all } => commands::update::run(path, all, args),
-        Commands::Remove { path, force } => commands::remove::run(path, force, args),
+        Commands::Remove { path, force } => commands::remove::run(&path, force, args),
         Commands::Config { key, value, reset } => commands::config::run(key, value, reset, args),
         Commands::Mcp {} => {
             eprintln!("MCP server not yet implemented");

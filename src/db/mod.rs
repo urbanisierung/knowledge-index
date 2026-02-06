@@ -20,7 +20,7 @@ pub enum RepoStatus {
 
 impl RepoStatus {
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Self::Pending => "pending",
             Self::Indexing => "indexing",
@@ -32,7 +32,6 @@ impl RepoStatus {
     #[must_use]
     pub fn from_str(s: &str) -> Self {
         match s {
-            "pending" => Self::Pending,
             "indexing" => Self::Indexing,
             "ready" => Self::Ready,
             "error" => Self::Error,
@@ -109,12 +108,9 @@ impl FileType {
             "org" => Self::OrgMode,
             "rst" => Self::ReStructuredText,
             // Config
-            "json" | "jsonc" => Self::Config,
-            "yaml" | "yml" => Self::Config,
-            "toml" => Self::Config,
-            "xml" => Self::Config,
-            "ini" | "cfg" => Self::Config,
-            "env" => Self::Config,
+            "json" | "jsonc" | "yaml" | "yml" | "toml" | "xml" | "ini" | "cfg" | "env" => {
+                Self::Config
+            }
             _ => Self::Unknown,
         }
     }
@@ -135,6 +131,7 @@ pub struct Repository {
 
 /// File record
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct FileRecord {
     pub id: i64,
     pub repo_id: i64,
@@ -147,6 +144,7 @@ pub struct FileRecord {
 
 /// Search result
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct SearchResult {
     pub repo_name: String,
     pub repo_path: PathBuf,
@@ -350,6 +348,8 @@ impl Database {
     }
 
     /// Delete repository by path
+    /// Delete repository by path
+    #[allow(dead_code)]
     pub fn delete_repository_by_path(&self, path: &Path) -> Result<()> {
         if let Some(repo) = self.get_repository_by_path(path)? {
             self.delete_repository(repo.id)?;
@@ -380,6 +380,7 @@ impl Database {
     }
 
     /// Insert a file record
+    #[allow(clippy::too_many_arguments)]
     pub fn insert_file(
         &self,
         repo_id: i64,
@@ -503,7 +504,9 @@ impl Database {
         }
 
         sql.push_str(" ORDER BY score LIMIT ? OFFSET ?");
+        #[allow(clippy::cast_possible_wrap)]
         params_vec.push(Box::new(limit as i64));
+        #[allow(clippy::cast_possible_wrap)]
         params_vec.push(Box::new(offset as i64));
 
         let mut stmt = conn.prepare(&sql)?;
@@ -532,6 +535,7 @@ impl Database {
     }
 
     /// Count total search results
+    #[allow(dead_code)]
     pub fn search_count(
         &self,
         query: &str,

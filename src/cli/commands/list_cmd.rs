@@ -65,6 +65,7 @@ pub fn run(args: &Args) -> Result<()> {
             );
 
             // Format size
+            #[allow(clippy::cast_sign_loss)]
             let size_str = format_bytes(repo.total_size_bytes as u64);
 
             if colors {
@@ -113,6 +114,7 @@ fn format_time_ago(duration: chrono::Duration) -> String {
     }
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn format_bytes(bytes: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;
