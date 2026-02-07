@@ -97,12 +97,17 @@ knowledge-index search "async fn"
 knowledge-index search "database connection" --repo api-service
 knowledge-index search "TODO" --type markdown
 knowledge-index search "config" --limit 50
+knowledge-index search "authentication logic" --semantic
+knowledge-index search "error handling" --hybrid
 ```
 
 Options:
 - `--repo <NAME>` - Filter by repository name
 - `--type <TYPE>` - Filter by file type (rust, python, markdown, etc.)
 - `--limit <N>` - Maximum results (default: 20)
+- `--semantic` - Use vector/embedding search (requires `enable_semantic_search = true`)
+- `--hybrid` - Combine lexical + semantic search with RRF fusion
+- `--lexical` - Use full-text search only (default)
 
 ### `list`
 
@@ -160,6 +165,9 @@ Configuration is stored at:
 | `batch_size` | 100 | Files per database transaction |
 | `watcher_debounce_ms` | 500 | File watcher debounce delay |
 | `ignore_patterns` | [".git", "node_modules", ...] | Patterns to ignore |
+| `enable_semantic_search` | false | Enable vector embeddings for semantic search |
+| `embedding_model` | "all-MiniLM-L6-v2" | Embedding model to use |
+| `default_search_mode` | "lexical" | Default search mode (lexical, semantic, hybrid) |
 
 ## Database
 
@@ -168,12 +176,31 @@ The index database is stored at:
 - **macOS:** `~/Library/Application Support/knowledge-index/index.db`
 - **Windows:** `%APPDATA%\knowledge-index\index.db`
 
-It uses SQLite with FTS5 for full-text search.
+It uses SQLite with FTS5 for full-text search. When semantic search is enabled, embeddings are stored in a separate table.
 
-## Search Syntax
+## Search Modes
+
+### Lexical (Default)
+Full-text search using SQLite FTS5. Best for exact keyword matches, code symbols, and specific terms.
 
 - Simple words: `function database`
 - Phrases: `"exact phrase"`
 - Prefix matching: `func*`
 - Boolean: `config AND database`
 - Exclusion: `config NOT test`
+
+### Semantic (--semantic)
+Vector-based search using embedding similarity. Best for conceptual queries where exact keywords may not match.
+
+```bash
+knowledge-index search "how to handle authentication" --semantic
+```
+
+Requires `enable_semantic_search = true` in config. On first use, downloads the embedding model (~22MB).
+
+### Hybrid (--hybrid)
+Combines lexical and semantic search using Reciprocal Rank Fusion (RRF). Provides the best of both approaches.
+
+```bash
+knowledge-index search "error handling patterns" --hybrid
+```

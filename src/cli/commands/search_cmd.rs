@@ -1,25 +1,93 @@
 use owo_colors::OwoColorize;
 
 use crate::cli::args::Args;
-use crate::core::Searcher;
+use crate::config::Config;
+use crate::core::{Embedder, SearchMode, Searcher};
 use crate::db::Database;
 use crate::error::Result;
 
 use super::use_colors;
 
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub fn run(
     query: String,
     repo: Option<String>,
     file_type: Option<String>,
     limit: usize,
+    semantic: bool,
+    hybrid: bool,
+    lexical: bool,
     args: &Args,
 ) -> Result<()> {
     let colors = use_colors(args.no_color);
     let db = Database::open()?;
-    let searcher = Searcher::new(db);
+    let config = Config::load()?;
 
-    let results = searcher.search(&query, repo.as_deref(), file_type.as_deref(), limit, 0)?;
+    // Determine search mode
+    let mode = if semantic {
+        SearchMode::Semantic
+    } else if hybrid {
+        SearchMode::Hybrid
+    } else if lexical {
+        SearchMode::Lexical
+    } else {
+        SearchMode::from_str(&config.default_search_mode)
+    };
+
+    // Create searcher with embedder if needed for semantic/hybrid
+    let searcher = if (mode == SearchMode::Semantic || mode == SearchMode::Hybrid)
+        && config.enable_semantic_search
+    {
+        match Embedder::new(&config.embedding_model) {
+            Ok(embedder) => Searcher::with_embedder(db, embedder),
+            Err(e) => {
+                if !args.quiet {
+                    eprintln!(
+                        "{} Could not load embeddings: {}. Falling back to lexical search.",
+                        "Warning:".yellow(),
+                        e
+                    );
+                }
+                Searcher::new(db)
+            }
+        }
+    } else {
+        Searcher::new(db)
+    };
+
+    // Check if semantic search was requested but not available
+    let effective_mode = if (mode == SearchMode::Semantic || mode == SearchMode::Hybrid)
+        && !searcher.has_semantic_search()
+    {
+        if !args.quiet && !args.json {
+            if colors {
+                eprintln!(
+                    "{} Semantic search not enabled. Using lexical search.",
+                    "Note:".blue()
+                );
+                eprintln!(
+                    "  Enable with: {}",
+                    "enable_semantic_search = true".cyan()
+                );
+            } else {
+                eprintln!("Note: Semantic search not enabled. Using lexical search.");
+            }
+        }
+        SearchMode::Lexical
+    } else {
+        mode
+    };
+
+    let results = searcher.search_with_mode(
+        &query,
+        effective_mode,
+        repo.as_deref(),
+        file_type.as_deref(),
+        limit,
+        0,
+    )?;
 
     if results.is_empty() {
         if args.json {
@@ -28,7 +96,8 @@ pub fn run(
                 serde_json::json!({
                     "results": [],
                     "total": 0,
-                    "query": query
+                    "query": query,
+                    "mode": effective_mode.as_str()
                 })
             );
         } else if !args.quiet {
@@ -41,7 +110,10 @@ pub fn run(
             println!("Suggestions:");
             println!("  • Check spelling");
             println!("  • Try broader search terms");
-            println!("  • Use prefix matching: \"func*\"");
+            if effective_mode == SearchMode::Lexical {
+                println!("  • Use prefix matching: \"func*\"");
+                println!("  • Try --semantic for conceptual matching");
+            }
         }
         return Ok(());
     }
@@ -57,6 +129,7 @@ pub fn run(
                     "snippet": r.snippet,
                     "file_type": r.file_type,
                     "score": r.score,
+                    "search_mode": r.search_mode.as_str(),
                 })
             })
             .collect();
@@ -68,9 +141,20 @@ pub fn run(
                 "total": results.len(),
                 "query": query,
                 "limit": limit,
+                "mode": effective_mode.as_str(),
             })
         );
     } else if !args.quiet {
+        // Show search mode if not lexical
+        if effective_mode != SearchMode::Lexical && colors {
+            println!(
+                "{} {} search",
+                "Mode:".dimmed(),
+                effective_mode.as_str().blue()
+            );
+            println!();
+        }
+
         for result in &results {
             // Format: repo:path
             if colors {
@@ -95,7 +179,7 @@ pub fn run(
                 } else {
                     snippet.replace(">>>", "[").replace("<<<", "]")
                 };
-                
+
                 for line in formatted.lines() {
                     if colors {
                         println!("  {}", line.dimmed());

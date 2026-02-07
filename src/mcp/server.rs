@@ -9,13 +9,13 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::config::Config;
+use crate::core::{Embedder, SearchMode, Searcher};
 use crate::db::Database;
 
 /// MCP server for knowledge-index.
 #[derive(Clone)]
 pub struct KnowledgeIndexMcp {
     db: Arc<Mutex<Database>>,
-    #[allow(dead_code)]
     config: Arc<Config>,
 }
 
@@ -26,6 +26,7 @@ struct McpSearchResult {
     repo: String,
     snippet: String,
     score: f64,
+    mode: String,
 }
 
 /// Search response for MCP.
@@ -34,6 +35,7 @@ struct McpSearchResponse {
     results: Vec<McpSearchResult>,
     total: usize,
     query: String,
+    mode: String,
     truncated: bool,
     hint: Option<String>,
 }
@@ -66,6 +68,8 @@ pub struct SearchRequest {
     pub repo: Option<String>,
     #[schemars(description = "Filter by file type (e.g., 'rust', 'markdown', 'python')")]
     pub file_type: Option<String>,
+    #[schemars(description = "Search mode: 'lexical' (default), 'semantic', or 'hybrid'")]
+    pub mode: Option<String>,
 }
 
 /// Get file request parameters.
@@ -91,12 +95,49 @@ pub struct GetContextRequest {
 #[tool(tool_box)]
 impl KnowledgeIndexMcp {
     /// Search indexed content across all repositories.
-    #[tool(description = "Search indexed code and knowledge repositories for relevant content")]
+    #[tool(description = "Search indexed code and knowledge repositories for relevant content. Supports lexical (default), semantic (vector), or hybrid search modes.")]
     async fn search(&self, #[tool(aggr)] req: SearchRequest) -> String {
         let limit = req.limit.unwrap_or(10).min(50) as usize;
         let db = self.db.lock().await;
 
-        let results = match db.search(&req.query, req.repo.as_deref(), req.file_type.as_deref(), limit, 0) {
+        // Determine search mode
+        let search_mode = req
+            .mode
+            .as_deref()
+            .map_or_else(
+                || SearchMode::from_str(&self.config.default_search_mode),
+                SearchMode::from_str,
+            );
+
+        // Create searcher with embedder if needed
+        let searcher = if (search_mode == SearchMode::Semantic || search_mode == SearchMode::Hybrid)
+            && self.config.enable_semantic_search
+        {
+            match Embedder::new(&self.config.embedding_model) {
+                Ok(embedder) => Searcher::with_embedder(db.clone(), embedder),
+                Err(_) => Searcher::new(db.clone()),
+            }
+        } else {
+            Searcher::new(db.clone())
+        };
+
+        // Use lexical if semantic requested but not available
+        let effective_mode = if (search_mode == SearchMode::Semantic || search_mode == SearchMode::Hybrid)
+            && !searcher.has_semantic_search()
+        {
+            SearchMode::Lexical
+        } else {
+            search_mode
+        };
+
+        let results = match searcher.search_with_mode(
+            &req.query,
+            effective_mode,
+            req.repo.as_deref(),
+            req.file_type.as_deref(),
+            limit,
+            0,
+        ) {
             Ok(r) => r,
             Err(e) => return format!("{{\"error\": \"{e}\"}}"),
         };
@@ -111,6 +152,7 @@ impl KnowledgeIndexMcp {
                 repo: r.repo_name,
                 snippet: r.snippet,
                 score: r.score,
+                mode: r.search_mode.as_str().to_string(),
             })
             .collect();
 
@@ -118,6 +160,7 @@ impl KnowledgeIndexMcp {
             results: mcp_results,
             total,
             query: req.query,
+            mode: effective_mode.as_str().to_string(),
             truncated,
             hint: if truncated {
                 Some("Use 'limit' parameter to get more results, or use 'get_file' to read full content".into())

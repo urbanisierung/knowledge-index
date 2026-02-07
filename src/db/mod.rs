@@ -568,4 +568,202 @@ impl Database {
         let count: i64 = conn.query_row(&sql, params_refs.as_slice(), |row| row.get(0))?;
         Ok(count)
     }
+
+    // =========================================================================
+    // Embeddings
+    // =========================================================================
+
+    /// Store embeddings for a file
+    pub fn store_embeddings(
+        &self,
+        file_id: i64,
+        embeddings: &[(usize, usize, usize, &str, &[f32])], // (chunk_index, start, end, text, embedding)
+    ) -> Result<()> {
+        let conn = self.conn.lock().map_err(|e| AppError::Other(e.to_string()))?;
+
+        // Delete existing embeddings for this file
+        conn.execute("DELETE FROM embeddings WHERE file_id = ?1", params![file_id])?;
+
+        let mut stmt = conn.prepare(
+            "INSERT INTO embeddings (file_id, chunk_index, start_offset, end_offset, chunk_text, embedding)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+        )?;
+
+        for (chunk_index, start_offset, end_offset, chunk_text, embedding) in embeddings {
+            // Serialize embedding as bytes (f32 little-endian)
+            let embedding_bytes: Vec<u8> = embedding
+                .iter()
+                .flat_map(|f| f.to_le_bytes())
+                .collect();
+
+            #[allow(clippy::cast_possible_wrap)]
+            stmt.execute(params![
+                file_id,
+                *chunk_index as i64,
+                *start_offset as i64,
+                *end_offset as i64,
+                *chunk_text,
+                embedding_bytes,
+            ])?;
+        }
+
+        Ok(())
+    }
+
+    /// Delete embeddings for specific files
+    #[allow(dead_code)]
+    pub fn delete_embeddings(&self, file_ids: &[i64]) -> Result<()> {
+        if file_ids.is_empty() {
+            return Ok(());
+        }
+        
+        let conn = self.conn.lock().map_err(|e| AppError::Other(e.to_string()))?;
+        
+        let placeholders: Vec<String> = file_ids.iter().map(|_| "?".to_string()).collect();
+        let placeholders_str = placeholders.join(",");
+        
+        conn.execute(
+            &format!("DELETE FROM embeddings WHERE file_id IN ({placeholders_str})"),
+            rusqlite::params_from_iter(file_ids),
+        )?;
+        
+        Ok(())
+    }
+
+    /// Search by vector similarity
+    pub fn vector_search(
+        &self,
+        query_embedding: &[f32],
+        repo_filter: Option<&str>,
+        file_type_filter: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<VectorSearchResult>> {
+        let conn = self.conn.lock().map_err(|e| AppError::Other(e.to_string()))?;
+
+        // Build query with optional filters
+        let mut sql = String::from(
+            "SELECT r.name, r.path, f.relative_path, f.file_type, 
+                    e.chunk_text, e.embedding, e.start_offset, e.end_offset
+             FROM embeddings e
+             JOIN files f ON e.file_id = f.id
+             JOIN repositories r ON f.repo_id = r.id
+             WHERE 1=1"
+        );
+
+        let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+        if let Some(repo) = repo_filter {
+            sql.push_str(" AND r.name LIKE ?");
+            params_vec.push(Box::new(format!("%{repo}%")));
+        }
+
+        if let Some(file_type) = file_type_filter {
+            sql.push_str(" AND f.file_type = ?");
+            params_vec.push(Box::new(file_type.to_string()));
+        }
+
+        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(std::convert::AsRef::as_ref).collect();
+
+        let mut stmt = conn.prepare(&sql)?;
+        
+        let rows = stmt.query_map(params_refs.as_slice(), |row| {
+            let repo_name: String = row.get(0)?;
+            let repo_path: String = row.get(1)?;
+            let relative_path: String = row.get(2)?;
+            let file_type: String = row.get(3)?;
+            let chunk_text: String = row.get(4)?;
+            let embedding_bytes: Vec<u8> = row.get(5)?;
+            let start_offset: i64 = row.get(6)?;
+            let end_offset: i64 = row.get(7)?;
+
+            Ok((repo_name, repo_path, relative_path, file_type, chunk_text, embedding_bytes, start_offset, end_offset))
+        })?;
+
+        // Calculate similarities and collect results
+        let mut results: Vec<VectorSearchResult> = Vec::new();
+        
+        for row_result in rows {
+            let (repo_name, repo_path, relative_path, file_type, chunk_text, embedding_bytes, start_offset, end_offset) = row_result?;
+            
+            // Deserialize embedding from bytes
+            let doc_embedding: Vec<f32> = embedding_bytes
+                .chunks(4)
+                .filter_map(|chunk| {
+                    if chunk.len() == 4 {
+                        Some(f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            // Calculate cosine similarity
+            let similarity = Self::cosine_sim(query_embedding, &doc_embedding);
+            
+            let repo_path = PathBuf::from(&repo_path);
+            let file_path = PathBuf::from(&relative_path);
+            let absolute_path = repo_path.join(&file_path);
+            
+            results.push(VectorSearchResult {
+                repo_name,
+                repo_path,
+                file_path,
+                absolute_path,
+                chunk_text,
+                file_type,
+                similarity,
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                start_offset: start_offset as usize,
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                end_offset: end_offset as usize,
+            });
+        }
+
+        // Sort by similarity (descending) and take top N
+        results.sort_by(|a, b| b.similarity.partial_cmp(&a.similarity).unwrap_or(std::cmp::Ordering::Equal));
+        results.truncate(limit);
+
+        Ok(results)
+    }
+
+    /// Calculate cosine similarity between two vectors
+    fn cosine_sim(a: &[f32], b: &[f32]) -> f32 {
+        if a.len() != b.len() {
+            return 0.0;
+        }
+
+        let dot: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
+        let norm_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+        let norm_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+
+        if norm_a == 0.0 || norm_b == 0.0 {
+            0.0
+        } else {
+            dot / (norm_a * norm_b)
+        }
+    }
+
+    /// Check if embeddings are enabled (table exists and has data)
+    #[allow(dead_code)]
+    pub fn has_embeddings(&self) -> Result<bool> {
+        let conn = self.conn.lock().map_err(|e| AppError::Other(e.to_string()))?;
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM embeddings", [], |row| row.get(0))?;
+        Ok(count > 0)
+    }
+}
+
+/// Vector search result
+#[derive(Debug, Clone)]
+pub struct VectorSearchResult {
+    pub repo_name: String,
+    pub repo_path: PathBuf,
+    pub file_path: PathBuf,
+    pub absolute_path: PathBuf,
+    pub chunk_text: String,
+    pub file_type: String,
+    pub similarity: f32,
+    #[allow(dead_code)]
+    pub start_offset: usize,
+    #[allow(dead_code)]
+    pub end_offset: usize,
 }

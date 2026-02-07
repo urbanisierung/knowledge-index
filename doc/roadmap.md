@@ -1195,61 +1195,61 @@ Add semantic search capabilities alongside FTS5.
 
 ### Part 8.1: Architecture Decision
 
-- [ ] Evaluate trade-offs:
+- [x] Evaluate trade-offs:
   | Approach | Pros | Cons |
   |----------|------|------|
   | sqlite-vec | Single DB file, no deps | Requires embedding model |
   | Local ONNX model | Offline, fast | ~100MB model size, CPU intensive |
   | API-based embeddings | Best quality | Requires network, costs money |
-- [ ] Recommended: Start with `sqlite-vec` + local ONNX model
-- [ ] Make vector search opt-in via `config.enable_semantic_search`
+- [x] Recommended: Start with `sqlite-vec` + local ONNX model
+- [x] Make vector search opt-in via `config.enable_semantic_search`
 
 ### Part 8.2: Embedding Pipeline
 
-- [ ] Add `ort` crate for ONNX Runtime inference
-- [ ] Choose model: `all-MiniLM-L6-v2` (22MB, good quality/speed)
-- [ ] Download model on first use to config directory
-- [ ] Create embedding function:
+- [x] Add `fastembed` crate for embedding generation (uses ONNX internally)
+- [x] Choose model: `all-MiniLM-L6-v2` (22MB, good quality/speed)
+- [x] Download model on first use to config directory
+- [x] Create embedding function:
   ```rust
   fn embed_text(model: &Session, text: &str) -> Result<Vec<f32>> {
       // Tokenize, run inference, return 384-dim vector
   }
   ```
-- [ ] Chunk large files into ~512 token segments with overlap
-- [ ] Store embeddings during indexing (when enabled)
+- [x] Chunk large files into ~512 token segments with overlap
+- [x] Store embeddings during indexing (when enabled)
 
 ### Part 8.3: Vector Storage
 
-- [ ] Add `sqlite-vec` extension loading
-- [ ] Extend schema:
+- [x] Store embeddings as binary blobs in SQLite (no extension needed)
+- [x] Extend schema:
   ```sql
-  CREATE VIRTUAL TABLE IF NOT EXISTS embeddings USING vec0(
-      file_id INTEGER PRIMARY KEY,
-      chunk_index INTEGER,
-      embedding FLOAT[384]
+  CREATE TABLE IF NOT EXISTS embeddings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_id INTEGER NOT NULL,
+      chunk_index INTEGER NOT NULL,
+      start_offset INTEGER NOT NULL,
+      end_offset INTEGER NOT NULL,
+      chunk_text TEXT NOT NULL,
+      embedding BLOB NOT NULL
   );
   ```
-- [ ] Index embeddings for fast similarity search
-- [ ] Handle schema migration when feature is enabled
+- [x] Cosine similarity calculation in Rust
+- [x] Handle schema migration when feature is enabled
 
 ### Part 8.4: Hybrid Search
 
-- [ ] Implement similarity search:
-  ```sql
-  SELECT file_id, distance
-  FROM embeddings
-  WHERE embedding MATCH ?
-  ORDER BY distance
-  LIMIT ?
+- [x] Implement similarity search:
+  ```rust
+  fn vector_search(&self, query_embedding: &[f32], ...) -> Result<Vec<VectorSearchResult>>
   ```
-- [ ] Implement Reciprocal Rank Fusion:
+- [x] Implement Reciprocal Rank Fusion:
   ```rust
   fn fuse_results(fts_results: Vec<(Id, f64)>, vec_results: Vec<(Id, f64)>, k: f64) -> Vec<(Id, f64)> {
       // RRF formula: score = sum(1 / (k + rank))
       // Combine rankings from both sources
   }
   ```
-- [ ] Add flags:
+- [x] Add flags:
   - `--semantic` — vector search only
   - `--hybrid` — combine FTS and vector (default when enabled)
   - `--lexical` — FTS only (always available)
@@ -1258,7 +1258,7 @@ Add semantic search capabilities alongside FTS5.
 
 - [ ] Embedding generation is slow; show progress
 - [ ] Consider async embedding to not block UI
-- [ ] Cache embeddings aggressively (hash-based invalidation)
+- [x] Cache embeddings aggressively (hash-based invalidation)
 - [ ] Provide `knowledge-index rebuild-embeddings` for regeneration
 
 ---

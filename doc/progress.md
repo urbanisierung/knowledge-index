@@ -2,6 +2,39 @@
 
 ## Changelog
 
+### 2026-02-08
+
+- **Implemented Phase 8: Vector Search (Semantic Search)**
+  - Added `fastembed` crate (v5) for local embedding generation
+  - Uses all-MiniLM-L6-v2 model (384 dimensions, ~22MB)
+  - Created `src/core/embedder.rs` with:
+    - `Embedder` struct with model loading
+    - Text chunking (~512 tokens with 50 token overlap)
+    - Batch embedding generation
+    - Query embedding for search
+  - Extended database schema (version 2):
+    - Added `embeddings` table for vector storage
+    - Migration support for existing databases
+    - Embeddings stored as binary blobs (f32 little-endian)
+  - Added vector search to `Database`:
+    - `store_embeddings()` for batch storage
+    - `vector_search()` with cosine similarity
+  - Enhanced `Searcher` with multi-mode search:
+    - `SearchMode`: Lexical, Semantic, Hybrid
+    - `search_with_mode()` for mode selection
+    - Hybrid search with Reciprocal Rank Fusion (RRF, k=60)
+  - Added CLI search mode flags:
+    - `--semantic`: Use vector/embedding search
+    - `--hybrid`: Combined lexical + semantic with RRF
+    - `--lexical`: Full-text search (default)
+  - Updated MCP server search tool:
+    - Added `mode` parameter ("lexical", "semantic", "hybrid")
+    - Response includes effective search mode used
+  - Added config options:
+    - `enable_semantic_search`: Toggle embedding generation
+    - `embedding_model`: Model name (default: all-MiniLM-L6-v2)
+    - `default_search_mode`: Default mode for searches
+
 ### 2026-02-07
 
 - **Updated Roadmap Tracking**

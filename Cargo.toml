@@ -20,6 +20,9 @@ crossterm = "0.28"
 # Database
 rusqlite = { version = "0.32", features = ["bundled", "modern_sqlite"] }
 
+# Embeddings (Vector Search)
+fastembed = "5"
+
 # Async
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "io-std"] }
 
