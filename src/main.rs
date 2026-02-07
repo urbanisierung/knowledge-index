@@ -3,6 +3,7 @@ mod config;
 mod core;
 mod db;
 mod error;
+mod mcp;
 mod tui;
 
 use atty::is;
@@ -43,14 +44,23 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
             repo,
             file_type,
             limit,
-        } => commands::search::run(query, repo, file_type, limit, args),
+            semantic,
+            hybrid,
+            lexical,
+        } => commands::search::run(query, repo, file_type, limit, semantic, hybrid, lexical, args),
         Commands::List {} => commands::list::run(args),
         Commands::Update { path, all } => commands::update::run(path, all, args),
         Commands::Remove { path, force } => commands::remove::run(&path, force, args),
         Commands::Config { key, value, reset } => commands::config::run(key, value, reset, args),
-        Commands::Mcp {} => {
-            eprintln!("MCP server not yet implemented");
-            Ok(())
-        }
+        Commands::Mcp {} => run_mcp_server(),
     }
+}
+
+fn run_mcp_server() -> Result<()> {
+    let config = config::Config::load()?;
+    let db = db::Database::open()?;
+
+    tokio::runtime::Runtime::new()
+        .map_err(|e| error::AppError::Other(format!("Failed to create runtime: {e}")))?
+        .block_on(mcp::run_mcp_server(db, config))
 }

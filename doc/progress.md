@@ -2,6 +2,66 @@
 
 ## Changelog
 
+### 2026-02-08
+
+- **Implemented Phase 8: Vector Search (Semantic Search)**
+  - Added `fastembed` crate (v5) for local embedding generation
+  - Uses all-MiniLM-L6-v2 model (384 dimensions, ~22MB)
+  - Created `src/core/embedder.rs` with:
+    - `Embedder` struct with model loading
+    - Text chunking (~512 tokens with 50 token overlap)
+    - Batch embedding generation
+    - Query embedding for search
+  - Extended database schema (version 2):
+    - Added `embeddings` table for vector storage
+    - Migration support for existing databases
+    - Embeddings stored as binary blobs (f32 little-endian)
+  - Added vector search to `Database`:
+    - `store_embeddings()` for batch storage
+    - `vector_search()` with cosine similarity
+  - Enhanced `Searcher` with multi-mode search:
+    - `SearchMode`: Lexical, Semantic, Hybrid
+    - `search_with_mode()` for mode selection
+    - Hybrid search with Reciprocal Rank Fusion (RRF, k=60)
+  - Added CLI search mode flags:
+    - `--semantic`: Use vector/embedding search
+    - `--hybrid`: Combined lexical + semantic with RRF
+    - `--lexical`: Full-text search (default)
+  - Updated MCP server search tool:
+    - Added `mode` parameter ("lexical", "semantic", "hybrid")
+    - Response includes effective search mode used
+  - Added config options:
+    - `enable_semantic_search`: Toggle embedding generation
+    - `embedding_model`: Model name (default: all-MiniLM-L6-v2)
+    - `default_search_mode`: Default mode for searches
+
+### 2026-02-07
+
+- **Updated Roadmap Tracking**
+  - Added rule to `.github/copilot-instructions.md` for checking off completed action items
+  - Reviewed and checked off all completed items in `doc/roadmap.md` for Phases 1-5
+
+- **Implemented Phase 6: Background Watcher (Core)**
+  - Created `src/core/watcher.rs` with `IndexWatcher` struct
+  - Implemented file system watching using `notify` crate
+  - Added debouncing (500ms) for collecting events before processing
+  - Event processing: map notify events to `ChangeType` (Created, Modified, Deleted)
+  - Filtering: ignore patterns, binary files, files outside indexed repos
+  - Batching changes by repository
+  - Note: TUI integration deferred to future iteration
+
+- **Implemented Phase 7: AI Integration (MCP Server)**
+  - Created `src/mcp/` module with MCP server implementation
+  - Added `rmcp` crate for Model Context Protocol support
+  - Implemented MCP tools:
+    - `search`: Search indexed content with optional filters
+    - `list_repos`: List all indexed repositories
+    - `get_file`: Get full file content with optional truncation
+    - `get_context`: Get lines of context around a specific line number
+  - `knowledge-index mcp` command starts stdio-based MCP server
+  - Structured JSON responses optimized for LLM consumption
+  - Truncation support with hints for follow-up actions
+
 ### 2026-02-06
 
 - Initial project scaffold created

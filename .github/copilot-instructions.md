@@ -45,6 +45,13 @@ doc/
 | `doc/progress.md` | Historical changelog | **Every change** |
 | `doc/features.md` | High-level feature list with timestamps | When features are added |
 | `doc/documentation.md` | Detailed CLI usage documentation | When features change |
+| `doc/roadmap.md` | Implementation roadmap with action items | Check items when completed |
+
+### Roadmap Tracking
+
+When completing action items from `doc/roadmap.md`:
+- Mark completed items with `[x]` instead of `[ ]`
+- Keep the roadmap up-to-date as features are implemented
 
 ## CLI Design
 

@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::Instant;
 
 use crate::config::Config;
+use crate::core::Embedder;
 use crate::db::{Database, FileRecord, FileType, RepoStatus, Repository};
 use crate::error::{AppError, Result};
 
@@ -39,6 +40,7 @@ pub struct IndexResult {
 pub struct Indexer {
     db: Database,
     config: Config,
+    embedder: Option<Embedder>,
 }
 
 // Binary file extensions to skip
@@ -56,7 +58,28 @@ const BINARY_EXTENSIONS: &[&str] = &[
 
 impl Indexer {
     pub fn new(db: Database, config: Config) -> Self {
-        Self { db, config }
+        Self {
+            db,
+            config,
+            embedder: None,
+        }
+    }
+
+    /// Create indexer with embedding support
+    #[allow(dead_code)]
+    pub fn with_embedder(db: Database, config: Config, embedder: Embedder) -> Self {
+        Self {
+            db,
+            config,
+            embedder: Some(embedder),
+        }
+    }
+
+    /// Check if embeddings are enabled
+    #[must_use]
+    #[allow(dead_code)]
+    pub fn has_embedder(&self) -> bool {
+        self.embedder.is_some()
     }
 
     /// Index a directory
@@ -379,6 +402,34 @@ impl Indexer {
             file_type.as_str(),
             &content_str,
         )?;
+
+        // Generate and store embeddings if enabled
+        if let Some(ref embedder) = self.embedder {
+            // Get the file_id we just inserted
+            if let Ok(files) = self.db.get_repository_files(repo_id) {
+                if let Some(file_record) = files.iter().find(|f| f.relative_path == relative) {
+                    // Generate embeddings for chunks
+                    if let Ok(chunk_embeddings) = embedder.embed_content(&content_str) {
+                        let embeddings: Vec<(usize, usize, usize, &str, &[f32])> = chunk_embeddings
+                            .iter()
+                            .enumerate()
+                            .map(|(idx, ce)| {
+                                (
+                                    idx,
+                                    ce.chunk.start_offset,
+                                    ce.chunk.end_offset,
+                                    ce.chunk.text.as_str(),
+                                    ce.embedding.as_slice(),
+                                )
+                            })
+                            .collect();
+
+                        // Store embeddings (ignore errors to not block indexing)
+                        let _ = self.db.store_embeddings(file_record.id, &embeddings);
+                    }
+                }
+            }
+        }
 
         Ok(size)
     }

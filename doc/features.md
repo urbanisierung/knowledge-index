@@ -20,11 +20,19 @@ This document tracks all features of the knowledge-index CLI application.
 | **Progress Indicators** | Visual progress bars during indexing | 2026-02-06 |
 | **Binary Detection** | Automatic skipping of binary files | 2026-02-06 |
 | **Gitignore Support** | Respects .gitignore patterns during indexing | 2026-02-06 |
+| **File Watcher (Core)** | Filesystem monitoring infrastructure for auto-updates | 2026-02-07 |
+| **MCP Server** | Model Context Protocol server for AI tool integration | 2026-02-07 |
+| **MCP Search Tool** | Search indexed content via MCP | 2026-02-07 |
+| **MCP List Repos Tool** | List repositories via MCP | 2026-02-07 |
+| **MCP Get File Tool** | Retrieve file content via MCP | 2026-02-07 |
+| **MCP Get Context Tool** | Get line context around specific lines via MCP | 2026-02-07 |
+| **Semantic Search** | Vector-based search using MiniLM embeddings | 2026-02-08 |
+| **Hybrid Search** | Combined lexical + semantic search with RRF fusion | 2026-02-08 |
+| **Text Chunking** | Smart chunking for embedding large files | 2026-02-08 |
+| **Search Mode Selection** | CLI flags for --semantic, --hybrid, --lexical | 2026-02-08 |
 
 ## Planned Features
 
-- MCP Server for AI tool integration
-- Background file watching for auto-updates
-- Vector search / semantic similarity
+- Background file watching (TUI integration)
 - Markdown frontmatter parsing
 - Remote sync capabilities

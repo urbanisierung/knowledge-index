@@ -2,7 +2,7 @@ use rusqlite::Connection;
 
 use crate::error::Result;
 
-pub const SCHEMA_VERSION: i32 = 1;
+pub const SCHEMA_VERSION: i32 = 2;
 
 /// Initialize database schema
 pub fn initialize(conn: &Connection) -> Result<()> {
@@ -86,10 +86,23 @@ fn create_schema(conn: &Connection) -> Result<()> {
             headings TEXT
         );
 
+        -- Vector embeddings for semantic search
+        CREATE TABLE IF NOT EXISTS embeddings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+            chunk_index INTEGER NOT NULL,
+            start_offset INTEGER NOT NULL,
+            end_offset INTEGER NOT NULL,
+            chunk_text TEXT NOT NULL,
+            embedding BLOB NOT NULL,
+            UNIQUE(file_id, chunk_index)
+        );
+
         -- Indexes
         CREATE INDEX IF NOT EXISTS idx_files_repo ON files(repo_id);
         CREATE INDEX IF NOT EXISTS idx_files_hash ON files(content_hash);
         CREATE INDEX IF NOT EXISTS idx_files_type ON files(file_type);
+        CREATE INDEX IF NOT EXISTS idx_embeddings_file ON embeddings(file_id);
         ",
     )?;
 
@@ -97,12 +110,25 @@ fn create_schema(conn: &Connection) -> Result<()> {
 }
 
 fn migrate(conn: &Connection, from_version: i32) -> Result<()> {
-    // Add migrations here as schema evolves
-    // For now, just recreate if version mismatch
-    if from_version < SCHEMA_VERSION {
-        // In a real app, we'd have proper migrations
-        // For now, this is a placeholder
-        create_schema(conn)?;
+    if from_version < 2 {
+        // Add embeddings table for version 2
+        conn.execute_batch(
+            r"
+            -- Vector embeddings for semantic search
+            CREATE TABLE IF NOT EXISTS embeddings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+                chunk_index INTEGER NOT NULL,
+                start_offset INTEGER NOT NULL,
+                end_offset INTEGER NOT NULL,
+                chunk_text TEXT NOT NULL,
+                embedding BLOB NOT NULL,
+                UNIQUE(file_id, chunk_index)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_embeddings_file ON embeddings(file_id);
+            ",
+        )?;
     }
     Ok(())
 }

@@ -23,6 +23,12 @@ pub struct Config {
     pub watcher_debounce_ms: u64,
     /// Number of files per database transaction batch
     pub batch_size: usize,
+    /// Enable semantic search with embeddings
+    pub enable_semantic_search: bool,
+    /// Embedding model name (from fastembed)
+    pub embedding_model: String,
+    /// Default search mode: "lexical", "semantic", or "hybrid"
+    pub default_search_mode: String,
 }
 
 impl Default for Config {
@@ -41,6 +47,9 @@ impl Default for Config {
             color_enabled: true,
             watcher_debounce_ms: 500,
             batch_size: 100,
+            enable_semantic_search: false,
+            embedding_model: String::from("all-MiniLM-L6-v2"),
+            default_search_mode: String::from("lexical"),
         }
     }
 }

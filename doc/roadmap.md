@@ -155,15 +155,15 @@ Phase 9 (Remote) [future] + Phase 10 (Release)
 
 ### MVP Checklist (Phases 1-5)
 
-- [ ] Config system with OS-aware paths
-- [ ] SQLite database with FTS5
-- [ ] `index` command indexes a directory
-- [ ] `search` command finds content
-- [ ] `update` command refreshes index
-- [ ] `list` command shows repositories
-- [ ] `remove` command deletes from index
-- [ ] TUI with search and repo management
-- [ ] All commands work with `--help`, `--json`, `--quiet`
+- [x] Config system with OS-aware paths
+- [x] SQLite database with FTS5
+- [x] `index` command indexes a directory
+- [x] `search` command finds content
+- [x] `update` command refreshes index
+- [x] `list` command shows repositories
+- [x] `remove` command deletes from index
+- [x] TUI with search and repo management
+- [x] All commands work with `--help`, `--json`, `--quiet`
 
 ### Definition of Done (per action item)
 
@@ -183,18 +183,18 @@ Establish core infrastructure, configuration, and project structure.
 
 ### Part 1.1: Configuration System
 
-- [ ] Create `src/config/mod.rs` with compile-time constants:
+- [x] Create `src/config/mod.rs` with compile-time constants:
   ```rust
   pub const APP_NAME: &str = "knowledge-index";
   pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
   pub const CONFIG_FILE_NAME: &str = "config.toml";
   pub const DATABASE_FILE_NAME: &str = "index.db";
   ```
-- [ ] Implement OS-aware config directory detection using `dirs` crate:
+- [x] Implement OS-aware config directory detection using `dirs` crate:
   - Linux: `~/.config/knowledge-index/`
   - macOS: `~/Library/Application Support/knowledge-index/`
   - Windows: `%APPDATA%\knowledge-index\`
-- [ ] Define `Config` struct with serde for TOML parsing:
+- [x] Define `Config` struct with serde for TOML parsing:
   ```rust
   #[derive(Debug, Deserialize, Serialize)]
   pub struct Config {
@@ -204,13 +204,13 @@ Establish core infrastructure, configuration, and project structure.
       pub color_enabled: bool,
   }
   ```
-- [ ] Implement config loading: check file exists → load → merge with defaults → validate
-- [ ] Create config directory and default file on first run if not exists
-- [ ] Add `Config::default()` with sensible values
+- [x] Implement config loading: check file exists → load → merge with defaults → validate
+- [x] Create config directory and default file on first run if not exists
+- [x] Add `Config::default()` with sensible values
 
 ### Part 1.2: Project Structure
 
-- [ ] Set up module structure:
+- [x] Set up module structure:
   ```
   src/
     main.rs           # Entry point, minimal logic
@@ -250,9 +250,9 @@ Establish core infrastructure, configuration, and project structure.
       mod.rs
     error.rs          # Custom error types with thiserror
   ```
-- [ ] Add `clap` with derive feature for CLI parsing
-- [ ] Define root `Cli` struct with subcommands enum
-- [ ] Implement dual-mode detection logic:
+- [x] Add `clap` with derive feature for CLI parsing
+- [x] Define root `Cli` struct with subcommands enum
+- [x] Implement dual-mode detection logic:
   ```rust
   // If no subcommand AND stdin is TTY → launch TUI
   // If subcommand provided → execute CLI command
@@ -261,8 +261,8 @@ Establish core infrastructure, configuration, and project structure.
 
 ### Part 1.3: Database Layer
 
-- [ ] Add `rusqlite` with `bundled` and `modern_sqlite` features (includes FTS5)
-- [ ] Design complete database schema:
+- [x] Add `rusqlite` with `bundled` and `modern_sqlite` features (includes FTS5)
+- [x] Design complete database schema:
   ```sql
   -- Schema version tracking
   CREATE TABLE IF NOT EXISTS schema_version (
@@ -304,10 +304,10 @@ Establish core infrastructure, configuration, and project structure.
   CREATE INDEX IF NOT EXISTS idx_files_repo ON files(repo_id);
   CREATE INDEX IF NOT EXISTS idx_files_hash ON files(content_hash);
   ```
-- [ ] Implement `Database` struct with connection management
-- [ ] Add migration system: check version → apply pending migrations in order
-- [ ] Create `DatabaseError` enum with descriptive variants
-- [ ] **Note:** SQLite doesn't need connection pooling for single-process; use `Mutex<Connection>` for thread safety
+- [x] Implement `Database` struct with connection management
+- [x] Add migration system: check version → apply pending migrations in order
+- [x] Create `DatabaseError` enum with descriptive variants
+- [x] **Note:** SQLite doesn't need connection pooling for single-process; use `Mutex<Connection>` for thread safety
 
 ---
 
@@ -319,13 +319,13 @@ Build the high-performance file indexing system.
 
 ### Part 2.1: File Discovery
 
-- [ ] Use `ignore` crate (not `walkdir`) — it respects `.gitignore` automatically
-- [ ] Configure walker with parallel iteration enabled
-- [ ] Create `FileFilter` that checks:
+- [x] Use `ignore` crate (not `walkdir`) — it respects `.gitignore` automatically
+- [x] Configure walker with parallel iteration enabled
+- [x] Create `FileFilter` that checks:
   - File extension against known binary types (`.exe`, `.bin`, `.png`, `.jpg`, etc.)
   - File size against `config.max_file_size_mb`
   - Magic bytes for binary detection (first 8KB, check for null bytes)
-- [ ] Implement file type detection by extension mapping:
+- [x] Implement file type detection by extension mapping:
   ```rust
   fn detect_file_type(path: &Path) -> FileType {
       match path.extension()?.to_str()? {
@@ -345,27 +345,27 @@ Build the high-performance file indexing system.
       }
   }
   ```
-- [ ] Support custom ignore patterns from config (glob syntax)
-- [ ] Respect `.obsidian/` and similar tool directories (ignore by default)
-- [ ] Log skipped files at debug level for troubleshooting
+- [x] Support custom ignore patterns from config (glob syntax)
+- [x] Respect `.obsidian/` and similar tool directories (ignore by default)
+- [x] Log skipped files at debug level for troubleshooting
 
 ### Part 2.2: Content Processing
 
-- [ ] Use `rayon::par_iter()` on collected file paths for parallel processing
-- [ ] Read files with size limit check before full read:
+- [x] Use `rayon::par_iter()` on collected file paths for parallel processing
+- [x] Read files with size limit check before full read:
   ```rust
   // Read up to max_size + 1 byte to detect oversized files
   let mut buffer = Vec::with_capacity(max_size + 1);
   file.take(max_size as u64 + 1).read_to_end(&mut buffer)?;
   if buffer.len() > max_size { return Err(FileTooLarge); }
   ```
-- [ ] Compute BLAKE3 hash of content (fast, parallelized internally)
-- [ ] Detect encoding using `encoding_rs` or BOM detection:
+- [x] Compute BLAKE3 hash of content (fast, parallelized internally)
+- [x] Detect encoding using `encoding_rs` or BOM detection:
   - Try UTF-8 first (most common)
   - Fall back to Latin-1 for legacy files
   - Skip files that can't be decoded as text
-- [ ] Normalize line endings (CRLF → LF) before storing
-- [ ] Strip excessive whitespace but preserve structure for search context
+- [x] Normalize line endings (CRLF → LF) before storing
+- [x] Strip excessive whitespace but preserve structure for search context
 
 ### Part 2.3: Markdown-Aware Processing
 
@@ -397,7 +397,7 @@ For markdown files (`.md`), extract additional metadata:
 
 ### Part 2.4: Index Management
 
-- [ ] Implement `index` command flow:
+- [x] Implement `index` command flow:
   1. Resolve path to absolute canonical form
   2. Check if already indexed → prompt for update or skip
   3. Insert repository record with status='indexing'
@@ -415,25 +415,25 @@ For markdown files (`.md`), extract additional metadata:
       start_time: Instant,
   }
   ```
-- [ ] Use `indicatif` crate for progress bar in CLI mode
-- [ ] Implement `update` command:
+- [x] Use `indicatif` crate for progress bar in CLI mode
+- [x] Implement `update` command:
   - Single repo: `knowledge-index update /path/to/repo`
   - All repos: `knowledge-index update --all`
   - Use incremental indexing (Part 2.4)
 
 ### Part 2.4: Incremental Indexing
 
-- [ ] For `update` command, implement smart diff:
+- [x] For `update` command, implement smart diff:
   1. Load existing file records for repository
   2. Walk current files, compare `(relative_path, mtime, size)` tuples
   3. Categorize into: unchanged, modified, new, deleted
   4. Skip unchanged files entirely
   5. Re-process modified and new files
   6. Delete removed files from index
-- [ ] Compare content hash only if mtime differs (avoid re-reading unchanged files)
-- [ ] Track and report: "Updated X files, added Y, removed Z, unchanged W"
-- [ ] Add `--force` flag to skip smart detection and re-index everything
-- [ ] Handle edge case: file exists in DB but is now unreadable (permission denied)
+- [x] Compare content hash only if mtime differs (avoid re-reading unchanged files)
+- [x] Track and report: "Updated X files, added Y, removed Z, unchanged W"
+- [x] Add `--force` flag to skip smart detection and re-index everything
+- [x] Handle edge case: file exists in DB but is now unreadable (permission denied)
 
 ---
 
@@ -445,13 +445,13 @@ Implement fast and relevant search capabilities.
 
 ### Part 3.1: Full-Text Search
 
-- [ ] Build FTS5 query wrapper that handles:
+- [x] Build FTS5 query wrapper that handles:
   - Escaping special characters (`"`, `*`, etc.)
   - Converting user query to FTS5 syntax
   - Supporting quoted phrases: `"exact match"`
   - Supporting prefix: `func*`
   - Supporting boolean: `rust AND async`, `error OR warning`
-- [ ] Use BM25 ranking (built into FTS5):
+- [x] Use BM25 ranking (built into FTS5):
   ```sql
   SELECT f.relative_path, r.path as repo_path, 
          snippet(contents, 1, '>>>', '<<<', '...', 64) as snippet,
@@ -463,26 +463,26 @@ Implement fast and relevant search capabilities.
   ORDER BY rank
   LIMIT ? OFFSET ?
   ```
-- [ ] Implement snippet extraction with configurable context size
-- [ ] Add highlight markers that work for both terminal (ANSI) and plain text
-- [ ] Handle empty results gracefully with helpful message
+- [x] Implement snippet extraction with configurable context size
+- [x] Add highlight markers that work for both terminal (ANSI) and plain text
+- [x] Handle empty results gracefully with helpful message
 
 ### Part 3.2: Search Filters
 
-- [ ] Add filter flags to search command:
+- [x] Add filter flags to search command:
   - `--repo <name>` — filter by repository name (substring match)
   - `--lang <language>` — filter by detected language
   - `--path <pattern>` — filter by file path (glob pattern)
   - `--ext <extension>` — filter by file extension
   - `--type <type>` — filter by content type: `code`, `markdown`, `config`, `all`
   - `--tag <tag>` — filter markdown files by frontmatter tag
-- [ ] Implement filter application in SQL WHERE clause
-- [ ] Allow combining multiple filters (AND logic)
-- [ ] Default `--type all` searches everything; users can narrow down
+- [x] Implement filter application in SQL WHERE clause
+- [x] Allow combining multiple filters (AND logic)
+- [x] Default `--type all` searches everything; users can narrow down
 
 ### Part 3.3: Search Output
 
-- [ ] Define `SearchResult` struct:
+- [x] Define `SearchResult` struct:
   ```rust
   pub struct SearchResult {
       pub repo_name: String,
@@ -499,17 +499,17 @@ Implement fast and relevant search capabilities.
       pub tags: Option<Vec<String>>,
   }
   ```
-- [ ] CLI output format (default):
+- [x] CLI output format (default):
   ```
   repo-name:src/main.rs:42
     ...matched >>>content<<< here...
   ```
-- [ ] JSON output format (`--json`):
+- [x] JSON output format (`--json`):
   ```json
   {"results": [...], "total": 42, "query": "...", "took_ms": 12}
   ```
-- [ ] Add `--limit` (default: 20) and `--offset` for pagination
-- [ ] Add `--count` flag to only return total count
+- [x] Add `--limit` (default: 20) and `--offset` for pagination
+- [x] Add `--count` flag to only return total count
 - [ ] Implement `--group-by-repo` to cluster results by repository
 
 ---
@@ -522,8 +522,8 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
 
 ### Part 4.1: TUI Foundation
 
-- [ ] Add dependencies: `ratatui`, `crossterm`
-- [ ] Create `App` struct to hold all application state:
+- [x] Add dependencies: `ratatui`, `crossterm`
+- [x] Create `App` struct to hold all application state:
   ```rust
   pub struct App {
       pub mode: AppMode,           // Search, RepoList, Help
@@ -549,8 +549,8 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
       // ...
   }
   ```
-- [ ] Use `std::panic::set_hook` to restore terminal on panic
-- [ ] Create main event loop:
+- [x] Use `std::panic::set_hook` to restore terminal on panic
+- [x] Create main event loop:
   ```rust
   loop {
       terminal.draw(|f| ui::render(f, &app))?;
@@ -560,12 +560,12 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
       if app.should_quit { break; }
   }
   ```
-- [ ] Handle `Ctrl+C` and `Ctrl+D` via key events (don't let them crash)
+- [x] Handle `Ctrl+C` and `Ctrl+D` via key events (don't let them crash)
 
 ### Part 4.2: Minimum Terminal Size
 
-- [ ] Define constants: `MIN_WIDTH = 60`, `MIN_HEIGHT = 15`
-- [ ] Check size in render function before drawing:
+- [x] Define constants: `MIN_WIDTH = 60`, `MIN_HEIGHT = 15`
+- [x] Check size in render function before drawing:
   ```rust
   fn render(frame: &mut Frame, app: &App) {
       let size = frame.area();
@@ -583,11 +583,11 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
   Required: 60x15
   Please resize your terminal.
   ```
-- [ ] Subscribe to resize events and trigger re-render
+- [x] Subscribe to resize events and trigger re-render
 
 ### Part 4.3: Layout Structure
 
-- [ ] Define main layout (vertical split):
+- [x] Define main layout (vertical split):
   ```
   ┌─────────────────────────────────┐
   │ Header: Mode tabs / Title       │  3 rows
@@ -600,14 +600,14 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
   │ Status Bar: Keys / Messages     │  1 row
   └─────────────────────────────────┘
   ```
-- [ ] Use `Layout::vertical()` with constraints
-- [ ] Make content area adapt to available space
+- [x] Use `Layout::vertical()` with constraints
+- [x] Make content area adapt to available space
 
 ### Part 4.4: Search View
 
-- [ ] Search input widget at top of content area
-- [ ] Debounce search queries (300ms delay after last keystroke)
-- [ ] Results list with selectable items:
+- [x] Search input widget at top of content area
+- [x] Debounce search queries (300ms delay after last keystroke)
+- [x] Results list with selectable items:
   - Show file path, repo name, snippet preview
   - Highlight selected row
   - Arrow keys to navigate, Enter to preview full file
@@ -615,7 +615,7 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
   - Show file content with search term highlighted
   - Scroll with j/k or arrow keys
   - Show line numbers
-- [ ] Keybindings:
+- [x] Keybindings:
   - `/` or start typing → focus search input
   - `Esc` → clear search / go back
   - `Enter` → preview file
@@ -624,30 +624,30 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
 
 ### Part 4.5: Repository Management View
 
-- [ ] List all indexed repositories as selectable list:
+- [x] List all indexed repositories as selectable list:
   ```
   ● my-project         │ 1,234 files │ 2 hours ago
   ○ another-repo       │   456 files │ 1 day ago
   ! broken-repo        │     - files │ error: not found
   ```
-- [ ] Status indicators: ● ready, ○ pending, ! error
-- [ ] Actions on selected repo:
+- [x] Status indicators: ● ready, ○ pending, ! error
+- [x] Actions on selected repo:
   - `u` → update/re-index
   - `d` → delete from index (with confirmation)
   - `Enter` → show files in this repo
   - `o` → open directory in file manager
-- [ ] Add new repo: `a` → prompt for path (or use file picker)
+- [x] Add new repo: `a` → prompt for path (or use file picker)
 
 ### Part 4.6: Help Overlay
 
-- [ ] Toggle with `?` key from any view
-- [ ] Modal overlay (semi-transparent background)
-- [ ] List all keybindings organized by category
-- [ ] Dismiss with `?`, `Esc`, or `q`
+- [x] Toggle with `?` key from any view
+- [x] Modal overlay (semi-transparent background)
+- [x] List all keybindings organized by category
+- [x] Dismiss with `?`, `Esc`, or `q`
 
 ### Part 4.7: Visual Design
 
-- [ ] Define color palette struct for consistency:
+- [x] Define color palette struct for consistency:
   ```rust
   pub struct Theme {
       pub bg: Color,
@@ -659,9 +659,9 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
       pub success: Color,
   }
   ```
-- [ ] Use default terminal colors where possible (respect user themes)
-- [ ] Status bar format: `[Mode] | message | key hints`
-- [ ] Add `--no-color` flag to disable colors in TUI (accessibility)
+- [x] Use default terminal colors where possible (respect user themes)
+- [x] Status bar format: `[Mode] | message | key hints`
+- [x] Add `--no-color` flag to disable colors in TUI (accessibility)
 
 ### Part 4.8: First-Run Experience (Onboarding)
 
@@ -849,25 +849,25 @@ pub enum Commands {
 }
 ```
 
-- [ ] Implement each command handler in separate file under `cli/commands/`
-- [ ] Entry point logic: `None` command → check TTY → launch TUI or show help
+- [x] Implement each command handler in separate file under `cli/commands/`
+- [x] Entry point logic: `None` command → check TTY → launch TUI or show help
 
 ### Part 5.2: Help System
 
-- [ ] Add `#[command(after_help = "...")]` with examples for each command:
+- [x] Add `#[command(after_help = "...")]` with examples for each command:
   ```
   Examples:
     knowledge-index index ~/projects/my-app
     knowledge-index search "async fn" --lang rust
     knowledge-index update --all
   ```
-- [ ] Include version info: `#[command(version, long_version = build_info())]`
-- [ ] Add `--help` examples that show common workflows
+- [x] Include version info: `#[command(version, long_version = build_info())]`
+- [x] Add `--help` examples that show common workflows
 - [ ] Consider adding `knowledge-index help <topic>` for detailed guides
 
 ### Part 5.3: Output Formats
 
-- [ ] Create `OutputFormat` enum and detection:
+- [x] Create `OutputFormat` enum and detection:
   ```rust
   fn detect_output_format(cli: &Cli) -> OutputFormat {
       if cli.json { return OutputFormat::Json; }
@@ -886,12 +886,12 @@ pub enum Commands {
       fn print_quiet(&self);
   }
   ```
-- [ ] Use `owo-colors` for colored output with terminal detection
-- [ ] Ensure all commands respect `--quiet` (only errors to stderr)
+- [x] Use `owo-colors` for colored output with terminal detection
+- [x] Ensure all commands respect `--quiet` (only errors to stderr)
 
 ### Part 5.4: Error Handling
 
-- [ ] Define application error type with `thiserror`:
+- [x] Define application error type with `thiserror`:
   ```rust
   #[derive(Error, Debug)]
   pub enum AppError {
@@ -906,8 +906,8 @@ pub enum Commands {
       // ...
   }
   ```
-- [ ] Print errors to stderr with context
-- [ ] Use exit codes: 0 = success, 1 = error, 2 = usage error
+- [x] Print errors to stderr with context
+- [x] Use exit codes: 0 = success, 1 = error, 2 = usage error
 - [ ] Show suggestion when possible ("Did you mean...?")
 
 ### Part 5.5: CLI User Experience
@@ -934,18 +934,18 @@ To remove stale entries: knowledge-index remove /home/user/old-project
 
 #### Command Feedback
 
-- [ ] Confirm destructive actions:
+- [x] Confirm destructive actions:
   ```
   $ knowledge-index remove my-project
   Remove "my-project" from index? [y/N] 
   ```
-- [ ] Show progress for long operations:
+- [x] Show progress for long operations:
   ```
   $ knowledge-index index ~/large-monorepo
   Scanning files... 12,345 found
   Indexing [████████████░░░░░░░░] 60% (7,407/12,345)
   ```
-- [ ] Summarize results:
+- [x] Summarize results:
   ```
   $ knowledge-index update --all
   Updated 3 repositories:
@@ -956,7 +956,7 @@ To remove stale entries: knowledge-index remove /home/user/old-project
 
 #### Helpful Hints
 
-- [ ] When no repos indexed:
+- [x] When no repos indexed:
   ```
   $ knowledge-index search "test"
   No repositories indexed yet.
@@ -964,7 +964,7 @@ To remove stale entries: knowledge-index remove /home/user/old-project
   Get started by indexing a project:
     knowledge-index index /path/to/project
   ```
-- [ ] When search returns no results:
+- [x] When search returns no results:
   ```
   $ knowledge-index search "xyznonexistent"
   No results found for "xyznonexistent"
@@ -974,7 +974,7 @@ To remove stale entries: knowledge-index remove /home/user/old-project
     • Try broader search terms
     • Use --repo to search specific repository
   ```
-- [ ] After first successful index:
+- [x] After first successful index:
   ```
   ✓ Indexed 1,234 files in 3.2s
 
@@ -986,10 +986,10 @@ To remove stale entries: knowledge-index remove /home/user/old-project
 
 #### Scripting-Friendly Mode
 
-- [ ] `--quiet` suppresses all non-error output
-- [ ] `--json` outputs machine-readable format
-- [ ] Exit codes are consistent and documented
-- [ ] No interactive prompts when stdin is not TTY
+- [x] `--quiet` suppresses all non-error output
+- [x] `--json` outputs machine-readable format
+- [x] Exit codes are consistent and documented
+- [x] No interactive prompts when stdin is not TTY
 
 ---
 
@@ -1001,8 +1001,8 @@ Implement filesystem monitoring for automatic index updates.
 
 ### Part 6.1: File Watcher Setup
 
-- [ ] Add `notify` crate with `macos_fsevent` feature for better macOS support
-- [ ] Create `Watcher` struct:
+- [x] Add `notify` crate with `macos_fsevent` feature for better macOS support
+- [x] Create `Watcher` struct:
   ```rust
   pub struct IndexWatcher {
       watcher: RecommendedWatcher,
@@ -1017,7 +1017,7 @@ Implement filesystem monitoring for automatic index updates.
       Deleted,
   }
   ```
-- [ ] Implement debouncing: collect events for 500ms before processing
+- [x] Implement debouncing: collect events for 500ms before processing
 - [ ] Handle platform limits:
   - Linux: check `max_user_watches`, log warning if too low
   - macOS: FSEvents has no practical limit
@@ -1025,7 +1025,7 @@ Implement filesystem monitoring for automatic index updates.
 
 ### Part 6.2: Event Processing
 
-- [ ] Map notify events to our change types:
+- [x] Map notify events to our change types:
   ```rust
   fn handle_event(event: notify::Event) -> Option<(PathBuf, ChangeType)> {
       match event.kind {
@@ -1036,11 +1036,11 @@ Implement filesystem monitoring for automatic index updates.
       }
   }
   ```
-- [ ] Filter events:
+- [x] Filter events:
   - Ignore paths matching ignore patterns
   - Ignore binary files
   - Ignore files outside indexed repositories
-- [ ] Batch changes by repository for efficient updates
+- [x] Batch changes by repository for efficient updates
 
 ### Part 6.3: Background Thread Integration
 
@@ -1081,8 +1081,8 @@ Enable seamless integration with AI assistants.
 
 ### Part 7.1: MCP Server Implementation
 
-- [ ] Add dependencies: `rmcp`, `tokio` (for async), `serde_json`
-- [ ] Create MCP server struct:
+- [x] Add dependencies: `rmcp`, `tokio` (for async), `serde_json`
+- [x] Create MCP server struct:
   ```rust
   #[derive(Clone)]
   pub struct KnowledgeIndexMcp {
@@ -1091,7 +1091,7 @@ Enable seamless integration with AI assistants.
       tool_router: ToolRouter<Self>,
   }
   ```
-- [ ] Implement stdio transport (for local AI tools):
+- [x] Implement stdio transport (for local AI tools):
   ```rust
   #[tokio::main]
   async fn run_mcp_server(db: Database, config: Config) -> Result<()> {
@@ -1102,7 +1102,7 @@ Enable seamless integration with AI assistants.
       Ok(())
   }
   ```
-- [ ] **Important:** Never write to stdout except MCP protocol messages; use stderr for logs
+- [x] **Important:** Never write to stdout except MCP protocol messages; use stderr for logs
 
 ### Part 7.2: MCP Tools
 
@@ -1142,12 +1142,12 @@ async fn index_repo(
 ) -> Result<CallToolResult, McpError>;
 ```
 
-- [ ] Implement each tool with proper error handling
-- [ ] Return structured JSON that LLMs can parse easily
+- [x] Implement each tool with proper error handling
+- [x] Return structured JSON that LLMs can parse easily
 
 ### Part 7.3: MCP Response Format
 
-- [ ] Design responses optimized for LLM consumption:
+- [x] Design responses optimized for LLM consumption:
   ```json
   {
     "results": [
@@ -1166,13 +1166,13 @@ async fn index_repo(
     "hint": "Use get_file to see full content of relevant files"
   }
   ```
-- [ ] Add `truncated` flag when results exceed reasonable size
-- [ ] Include hints for follow-up actions
-- [ ] Limit response size to avoid overwhelming context windows
+- [x] Add `truncated` flag when results exceed reasonable size
+- [x] Include hints for follow-up actions
+- [x] Limit response size to avoid overwhelming context windows
 
 ### Part 7.4: Integration Documentation
 
-- [ ] Create `doc/mcp-integration.md` with setup guides:
+- [x] Create `doc/mcp-integration.md` with setup guides:
   - GitHub Copilot CLI: how to configure as tool
   - Claude Desktop: mcp.json configuration example
   - VS Code with Continue: extension settings
@@ -1195,61 +1195,61 @@ Add semantic search capabilities alongside FTS5.
 
 ### Part 8.1: Architecture Decision
 
-- [ ] Evaluate trade-offs:
+- [x] Evaluate trade-offs:
   | Approach | Pros | Cons |
   |----------|------|------|
   | sqlite-vec | Single DB file, no deps | Requires embedding model |
   | Local ONNX model | Offline, fast | ~100MB model size, CPU intensive |
   | API-based embeddings | Best quality | Requires network, costs money |
-- [ ] Recommended: Start with `sqlite-vec` + local ONNX model
-- [ ] Make vector search opt-in via `config.enable_semantic_search`
+- [x] Recommended: Start with `sqlite-vec` + local ONNX model
+- [x] Make vector search opt-in via `config.enable_semantic_search`
 
 ### Part 8.2: Embedding Pipeline
 
-- [ ] Add `ort` crate for ONNX Runtime inference
-- [ ] Choose model: `all-MiniLM-L6-v2` (22MB, good quality/speed)
-- [ ] Download model on first use to config directory
-- [ ] Create embedding function:
+- [x] Add `fastembed` crate for embedding generation (uses ONNX internally)
+- [x] Choose model: `all-MiniLM-L6-v2` (22MB, good quality/speed)
+- [x] Download model on first use to config directory
+- [x] Create embedding function:
   ```rust
   fn embed_text(model: &Session, text: &str) -> Result<Vec<f32>> {
       // Tokenize, run inference, return 384-dim vector
   }
   ```
-- [ ] Chunk large files into ~512 token segments with overlap
-- [ ] Store embeddings during indexing (when enabled)
+- [x] Chunk large files into ~512 token segments with overlap
+- [x] Store embeddings during indexing (when enabled)
 
 ### Part 8.3: Vector Storage
 
-- [ ] Add `sqlite-vec` extension loading
-- [ ] Extend schema:
+- [x] Store embeddings as binary blobs in SQLite (no extension needed)
+- [x] Extend schema:
   ```sql
-  CREATE VIRTUAL TABLE IF NOT EXISTS embeddings USING vec0(
-      file_id INTEGER PRIMARY KEY,
-      chunk_index INTEGER,
-      embedding FLOAT[384]
+  CREATE TABLE IF NOT EXISTS embeddings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_id INTEGER NOT NULL,
+      chunk_index INTEGER NOT NULL,
+      start_offset INTEGER NOT NULL,
+      end_offset INTEGER NOT NULL,
+      chunk_text TEXT NOT NULL,
+      embedding BLOB NOT NULL
   );
   ```
-- [ ] Index embeddings for fast similarity search
-- [ ] Handle schema migration when feature is enabled
+- [x] Cosine similarity calculation in Rust
+- [x] Handle schema migration when feature is enabled
 
 ### Part 8.4: Hybrid Search
 
-- [ ] Implement similarity search:
-  ```sql
-  SELECT file_id, distance
-  FROM embeddings
-  WHERE embedding MATCH ?
-  ORDER BY distance
-  LIMIT ?
+- [x] Implement similarity search:
+  ```rust
+  fn vector_search(&self, query_embedding: &[f32], ...) -> Result<Vec<VectorSearchResult>>
   ```
-- [ ] Implement Reciprocal Rank Fusion:
+- [x] Implement Reciprocal Rank Fusion:
   ```rust
   fn fuse_results(fts_results: Vec<(Id, f64)>, vec_results: Vec<(Id, f64)>, k: f64) -> Vec<(Id, f64)> {
       // RRF formula: score = sum(1 / (k + rank))
       // Combine rankings from both sources
   }
   ```
-- [ ] Add flags:
+- [x] Add flags:
   - `--semantic` — vector search only
   - `--hybrid` — combine FTS and vector (default when enabled)
   - `--lexical` — FTS only (always available)
@@ -1258,7 +1258,7 @@ Add semantic search capabilities alongside FTS5.
 
 - [ ] Embedding generation is slow; show progress
 - [ ] Consider async embedding to not block UI
-- [ ] Cache embeddings aggressively (hash-based invalidation)
+- [x] Cache embeddings aggressively (hash-based invalidation)
 - [ ] Provide `knowledge-index rebuild-embeddings` for regeneration
 
 ---

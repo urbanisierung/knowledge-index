@@ -61,6 +61,8 @@ pub enum Commands {
   knowledge-index search \"database connection\"
   knowledge-index search \"async fn\" --repo api-service
   knowledge-index search \"TODO\" --type markdown
+  knowledge-index search \"error handling\" --semantic
+  knowledge-index search \"authentication\" --hybrid
 ")]
     Search {
         /// Search query (supports phrases and wildcards)
@@ -77,6 +79,18 @@ pub enum Commands {
         /// Maximum number of results
         #[arg(long, default_value = "20")]
         limit: usize,
+
+        /// Use semantic (vector) search
+        #[arg(long, conflicts_with_all = ["hybrid", "lexical"])]
+        semantic: bool,
+
+        /// Use hybrid search (combines lexical + semantic)
+        #[arg(long, conflicts_with_all = ["semantic", "lexical"])]
+        hybrid: bool,
+
+        /// Use lexical (full-text) search (default)
+        #[arg(long, conflicts_with_all = ["semantic", "hybrid"])]
+        lexical: bool,
     },
 
     /// Update an existing index
