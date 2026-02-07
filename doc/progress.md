@@ -2,6 +2,33 @@
 
 ## Changelog
 
+### 2026-02-07
+
+- **Updated Roadmap Tracking**
+  - Added rule to `.github/copilot-instructions.md` for checking off completed action items
+  - Reviewed and checked off all completed items in `doc/roadmap.md` for Phases 1-5
+
+- **Implemented Phase 6: Background Watcher (Core)**
+  - Created `src/core/watcher.rs` with `IndexWatcher` struct
+  - Implemented file system watching using `notify` crate
+  - Added debouncing (500ms) for collecting events before processing
+  - Event processing: map notify events to `ChangeType` (Created, Modified, Deleted)
+  - Filtering: ignore patterns, binary files, files outside indexed repos
+  - Batching changes by repository
+  - Note: TUI integration deferred to future iteration
+
+- **Implemented Phase 7: AI Integration (MCP Server)**
+  - Created `src/mcp/` module with MCP server implementation
+  - Added `rmcp` crate for Model Context Protocol support
+  - Implemented MCP tools:
+    - `search`: Search indexed content with optional filters
+    - `list_repos`: List all indexed repositories
+    - `get_file`: Get full file content with optional truncation
+    - `get_context`: Get lines of context around a specific line number
+  - `knowledge-index mcp` command starts stdio-based MCP server
+  - Structured JSON responses optimized for LLM consumption
+  - Truncation support with hints for follow-up actions
+
 ### 2026-02-06
 
 - Initial project scaffold created

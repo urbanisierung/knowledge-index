@@ -21,7 +21,7 @@ crossterm = "0.28"
 rusqlite = { version = "0.32", features = ["bundled", "modern_sqlite"] }
 
 # Async
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "io-std"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -32,6 +32,9 @@ toml = "0.8"
 ignore = "0.4"
 blake3 = "1"
 notify = { version = "7", features = ["macos_fsevent"] }
+
+# MCP Protocol
+rmcp = { version = "0.1", features = ["server", "transport-io"] }
 
 # Utilities
 dirs = "5"
