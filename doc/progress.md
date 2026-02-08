@@ -4,6 +4,29 @@
 
 ### 2026-02-08
 
+- **Implemented Low Priority Optional Features**
+  - Welcome Screen (First Run)
+    - Detects when no repositories are indexed
+    - Shows getting started guide
+    - Press Enter to continue, q to quit
+  - Debug Mode (`--debug` flag)
+    - Enables `RUST_BACKTRACE=1` for detailed error traces
+    - Shows hint to use --debug on errors
+  - Shell Aliases
+    - Added suggested aliases to --help output (ki, kis, kii)
+  - Markdown Syntax Stripping
+    - New config option `strip_markdown_syntax`
+    - Strips headers, bold/italic, links, blockquotes
+    - Preserves code block content
+  - Code Block Indexing
+    - New config option `index_code_blocks`
+    - Extracts code blocks with language tags
+    - Useful for searching by programming language
+  - Extended Config Command
+    - All new config options accessible via CLI
+    - Added: enable_semantic_search, embedding_model, default_search_mode
+    - Added: strip_markdown_syntax, index_code_blocks
+
 - **Implemented Medium Priority Optional Features**
   - TUI Preview Pane
     - Toggle with 'p' key in Search view

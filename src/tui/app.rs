@@ -5,6 +5,7 @@ use crate::db::{Database, Repository, SearchResult};
 /// Application mode/view
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppMode {
+    Welcome,
     Search,
     Repos,
     Help,
@@ -83,7 +84,7 @@ impl App {
             db,
             config,
             searcher,
-            mode: AppMode::Search,
+            mode: if first_run { AppMode::Welcome } else { AppMode::Search },
             should_quit: false,
             first_run,
             search_input: String::new(),
@@ -100,6 +101,11 @@ impl App {
             loading: false,
             loading_message: None,
         }
+    }
+    
+    /// Dismiss welcome screen and go to search mode
+    pub fn dismiss_welcome(&mut self) {
+        self.mode = AppMode::Search;
     }
 
     /// Perform search
@@ -153,7 +159,7 @@ impl App {
                     self.repos_selected = (self.repos_selected + 1) % self.repos.len();
                 }
             }
-            AppMode::Help => {}
+            AppMode::Welcome | AppMode::Help => {}
         }
     }
 
@@ -178,7 +184,7 @@ impl App {
                     };
                 }
             }
-            AppMode::Help => {}
+            AppMode::Welcome | AppMode::Help => {}
         }
     }
 

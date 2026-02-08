@@ -13,17 +13,27 @@ use cli::commands;
 use error::Result;
 
 fn main() {
-    if let Err(e) = run() {
-        eprintln!("Error: {e}");
+    let args = Args::parse();
+    
+    if let Err(e) = run_with_args(&args) {
+        if args.debug {
+            eprintln!("Error: {e:?}");
+        } else {
+            eprintln!("Error: {e}");
+            eprintln!("Run with --debug for more details.");
+        }
         std::process::exit(1);
     }
 }
 
-fn run() -> Result<()> {
-    let args = Args::parse();
+fn run_with_args(args: &Args) -> Result<()> {
+    // Enable backtraces in debug mode
+    if args.debug {
+        std::env::set_var("RUST_BACKTRACE", "1");
+    }
 
-    match args.command {
-        Some(ref cmd) => run_command(cmd.clone(), &args),
+    match &args.command {
+        Some(cmd) => run_command(cmd.clone(), args),
         None => {
             // No subcommand: if TTY, launch TUI; otherwise show help
             if is(atty::Stream::Stdout) && is(atty::Stream::Stdin) {

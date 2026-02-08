@@ -41,6 +41,11 @@ This document tracks all features of the knowledge-index CLI application.
 | **TUI Loading States** | Animated spinner overlay during operations | 2026-02-08 |
 | **Delete Confirmation** | Confirmation dialog before repo deletion | 2026-02-08 |
 | **Platform Limits Check** | Warn about Linux inotify limits before watching | 2026-02-08 |
+| **Welcome Screen** | First-run welcome screen with getting started guide | 2026-02-08 |
+| **Debug Mode** | `--debug` flag for verbose output with backtraces | 2026-02-08 |
+| **Shell Aliases** | Suggested shell aliases in --help output | 2026-02-08 |
+| **Markdown Syntax Stripping** | Config option to strip markdown for cleaner FTS | 2026-02-08 |
+| **Code Block Indexing** | Config option to index code blocks with language tags | 2026-02-08 |
 
 ## Planned Features
 

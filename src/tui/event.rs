@@ -29,9 +29,26 @@ pub fn handle_key_event(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
 
     // Mode-specific keys
     match app.mode {
+        AppMode::Welcome => handle_welcome_keys(app, code),
         AppMode::Help => handle_help_keys(app, code),
         AppMode::Search => handle_search_keys(app, code, modifiers),
         AppMode::Repos => handle_repos_keys(app, code),
+    }
+}
+
+fn handle_welcome_keys(app: &mut App, code: KeyCode) {
+    match code {
+        KeyCode::Enter | KeyCode::Char(' ') => {
+            app.dismiss_welcome();
+        }
+        KeyCode::Char('q') => {
+            app.should_quit = true;
+        }
+        KeyCode::Char('?') => {
+            app.dismiss_welcome();
+            app.mode = AppMode::Help;
+        }
+        _ => {}
     }
 }
 

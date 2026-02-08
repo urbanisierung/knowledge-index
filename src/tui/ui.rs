@@ -37,6 +37,7 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Render content based on mode
     match app.mode {
+        AppMode::Welcome => views::welcome::render(frame, app, chunks[1]),
         AppMode::Search => views::search::render(frame, app, chunks[1]),
         AppMode::Repos => views::repos::render(frame, app, chunks[1]),
         AppMode::Help => {
@@ -117,6 +118,7 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
         (msg.clone(), Style::default().fg(color))
     } else {
         let hints = match app.mode {
+            AppMode::Welcome => "Enter continue │ ? help │ q quit",
             AppMode::Search => {
                 if app.show_preview {
                     "j/k scroll preview │ p close preview │ Tab repos │ q quit"

@@ -15,6 +15,11 @@ use std::path::PathBuf;
   knowledge-index search \"async fn\"   Search for async functions
   knowledge-index search \"TODO\" --type markdown
   knowledge-index list                List all indexed repositories
+
+Shell Aliases (add to ~/.bashrc or ~/.zshrc):
+  alias ki='knowledge-index'
+  alias kis='knowledge-index search'
+  alias kii='knowledge-index index .'
 ")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
@@ -36,6 +41,10 @@ pub struct Args {
     /// Enable verbose output
     #[arg(long, short, global = true)]
     pub verbose: bool,
+
+    /// Enable debug output with backtraces
+    #[arg(long, global = true)]
+    pub debug: bool,
 }
 
 #[derive(Subcommand, Clone)]

@@ -12,6 +12,7 @@ pub const DATABASE_FILE_NAME: &str = "index.db";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     /// Maximum file size in MB to index (files larger are skipped)
     pub max_file_size_mb: u32,
@@ -29,6 +30,10 @@ pub struct Config {
     pub embedding_model: String,
     /// Default search mode: "lexical", "semantic", or "hybrid"
     pub default_search_mode: String,
+    /// Strip markdown syntax from indexed content for cleaner FTS
+    pub strip_markdown_syntax: bool,
+    /// Index code blocks with their language tags
+    pub index_code_blocks: bool,
 }
 
 impl Default for Config {
@@ -50,6 +55,8 @@ impl Default for Config {
             enable_semantic_search: false,
             embedding_model: String::from("all-MiniLM-L6-v2"),
             default_search_mode: String::from("lexical"),
+            strip_markdown_syntax: false,
+            index_code_blocks: true,
         }
     }
 }

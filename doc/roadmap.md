@@ -383,7 +383,7 @@ For markdown files (`.md`), extract additional metadata:
   ```
 - [x] Extract headings for better search context
 - [x] Detect and index wiki-style links: `[[Other Note]]`, `[[note|display text]]`
-- [ ] *(Optional)* Index code blocks with their language tags
+- [x] Index code blocks with their language tags (config option)
 - [x] Store metadata in separate table for filtered searches (schema exists):
   ```sql
   CREATE TABLE IF NOT EXISTS markdown_meta (
@@ -394,7 +394,7 @@ For markdown files (`.md`), extract additional metadata:
       headings TEXT        -- JSON array of headings
   );
   ```
-- [ ] *(Optional)* Consider stripping markdown syntax for cleaner full-text search
+- [x] Config option to strip markdown syntax for cleaner full-text search
 - [ ] *(Optional)* Preserve original for accurate snippets
 
 ### Part 2.4: Index Management
@@ -669,23 +669,10 @@ Build the interactive TUI using `ratatui` with `crossterm` backend.
 
 **Note:** These are optional UX enhancements. The TUI works without them.
 
-- [ ] *(Optional)* Detect first run (no config file exists)
-- [ ] *(Optional)* Show welcome screen in TUI:
-  ```
-  ┌─────────────────────────────────────────┐
-  │  Welcome to knowledge-index!            │
-  │                                         │
-  │  Get started:                           │
-  │  1. Press 'a' to add your first repo    │
-  │  2. Or run: knowledge-index index .     │
-  │                                         │
-  │  Press '?' for help at any time.        │
-  │                                         │
-  │  [Press any key to continue]            │
-  └─────────────────────────────────────────┘
-  ```
-- [ ] *(Optional)* Auto-dismiss after first repo is added
-- [ ] *(Optional)* Don't show again once user has indexed at least one repo
+- [x] Detect first run (no repositories indexed)
+- [x] Show welcome screen in TUI with getting started guide
+- [x] Auto-dismiss after user presses Enter or indexes first repo
+- [x] Don't show again once user has indexed at least one repo
 
 ### Part 4.9: Empty States
 
@@ -1190,10 +1177,11 @@ async fn index_repo(
   - GitHub Copilot CLI: how to configure as tool
   - Claude Desktop: mcp.json configuration example
   - VS Code with Continue: extension settings
-- [ ] *(Optional)* Provide example shell aliases:
+- [x] Shell aliases provided in --help output:
   ```bash
-  alias ki-search='knowledge-index search --json'
-  alias ki-context='knowledge-index mcp'  # For piping
+  alias ki='knowledge-index'
+  alias kis='knowledge-index search'
+  alias kii='knowledge-index index .'
   ```
 - [ ] *(Optional)* Document expected environment variables and paths
 
@@ -1386,7 +1374,7 @@ Final quality improvements and release preparation.
   ```rust
   .with_context(|| format!("Failed to read file: {}", path.display()))?
   ```
-- [ ] *(Optional)* Add `--debug` flag for verbose error output with backtraces
+- [x] `--debug` flag for verbose error output with backtraces
 - [ ] *(Pre-release)* Test error paths:
   - Permission denied on files/directories
   - Disk full during indexing
