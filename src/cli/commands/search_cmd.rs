@@ -71,10 +71,7 @@ pub fn run(
                     "{} Semantic search not enabled. Using lexical search.",
                     "Note:".blue()
                 );
-                eprintln!(
-                    "  Enable with: {}",
-                    "enable_semantic_search = true".cyan()
-                );
+                eprintln!("  Enable with: {}", "enable_semantic_search = true".cyan());
             } else {
                 eprintln!("Note: Semantic search not enabled. Using lexical search.");
             }
@@ -191,7 +188,10 @@ pub fn run(
             // Group results by repository for display
             let mut grouped: BTreeMap<String, Vec<_>> = BTreeMap::new();
             for result in &results {
-                grouped.entry(result.repo_name.clone()).or_default().push(result);
+                grouped
+                    .entry(result.repo_name.clone())
+                    .or_default()
+                    .push(result);
             }
 
             for (repo_name, repo_results) in &grouped {
@@ -216,10 +216,7 @@ pub fn run(
                 for result in repo_results {
                     // Format: indented path
                     if colors {
-                        println!(
-                            "  {}",
-                            result.file_path.display().to_string().cyan()
-                        );
+                        println!("  {}", result.file_path.display().to_string().cyan());
                     } else {
                         println!("  {}", result.file_path.display());
                     }

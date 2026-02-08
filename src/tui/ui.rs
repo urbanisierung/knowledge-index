@@ -26,9 +26,9 @@ pub fn render(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Header
-            Constraint::Min(0),     // Content
-            Constraint::Length(1),  // Status bar
+            Constraint::Length(3), // Header
+            Constraint::Min(0),    // Content
+            Constraint::Length(1), // Status bar
         ])
         .split(size);
 
@@ -97,9 +97,12 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
     ];
 
     let header = Paragraph::new(vec![
-        Line::from(vec![
-            Span::styled("knowledge-index", Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan)),
-        ]),
+        Line::from(vec![Span::styled(
+            "knowledge-index",
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Cyan),
+        )]),
         Line::from(tabs),
     ])
     .block(Block::default().borders(Borders::BOTTOM));
@@ -149,13 +152,11 @@ fn render_loading(frame: &mut Frame, app: &App, size: Rect) {
     let area = centered_rect(width.min(size.width - 4), height, size);
 
     frame.render_widget(Clear, area);
-    let loading = Paragraph::new(text)
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Blue)),
-        );
+    let loading = Paragraph::new(text).alignment(Alignment::Center).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Blue)),
+    );
     frame.render_widget(loading, area);
 }
 
@@ -172,9 +173,17 @@ fn render_confirm_dialog(frame: &mut Frame, dialog: &super::app::ConfirmDialog, 
         Line::from(""),
         Line::from(""),
         Line::from(vec![
-            Span::styled("  [Y]es  ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "  [Y]es  ",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw("  "),
-            Span::styled("  [N]o  ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "  [N]o  ",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            ),
         ]),
     ];
 

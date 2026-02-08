@@ -11,6 +11,7 @@ use ratatui::{
 use crate::tui::app::App;
 
 /// Render the welcome screen for first-time users.
+#[allow(clippy::too_many_lines)]
 pub fn render(frame: &mut Frame, _app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -25,10 +26,7 @@ pub fn render(frame: &mut Frame, _app: &App, area: Rect) {
 
     let title = vec![
         Line::from(vec![
-            Span::styled(
-                "Welcome to ",
-                Style::default().fg(Color::White),
-            ),
+            Span::styled("Welcome to ", Style::default().fg(Color::White)),
             Span::styled(
                 "knowledge-index",
                 Style::default()
@@ -91,11 +89,26 @@ pub fn render(frame: &mut Frame, _app: &App, area: Rect) {
         Line::from(""),
         Line::from(vec![
             Span::styled("Press ", Style::default().fg(Color::Gray)),
-            Span::styled("Enter", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" to continue  •  ", Style::default().fg(Color::Gray)),
-            Span::styled("?", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "?",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" for help  •  ", Style::default().fg(Color::Gray)),
-            Span::styled("q", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "q",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" to quit", Style::default().fg(Color::Gray)),
         ]),
     ];

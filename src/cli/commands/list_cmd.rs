@@ -7,6 +7,7 @@ use crate::error::Result;
 
 use super::use_colors;
 
+#[allow(clippy::too_many_lines)]
 pub fn run(args: &Args) -> Result<()> {
     let colors = use_colors(args.no_color);
     let db = Database::open()?;
@@ -52,10 +53,34 @@ pub fn run(args: &Args) -> Result<()> {
         for repo in &repos {
             // Status indicator
             let status_icon = match repo.status {
-                RepoStatus::Ready => if colors { "●".green().to_string() } else { "●".to_string() },
-                RepoStatus::Pending => if colors { "○".yellow().to_string() } else { "○".to_string() },
-                RepoStatus::Indexing => if colors { "◐".cyan().to_string() } else { "◐".to_string() },
-                RepoStatus::Error => if colors { "!".red().to_string() } else { "!".to_string() },
+                RepoStatus::Ready => {
+                    if colors {
+                        "●".green().to_string()
+                    } else {
+                        "●".to_string()
+                    }
+                }
+                RepoStatus::Pending => {
+                    if colors {
+                        "○".yellow().to_string()
+                    } else {
+                        "○".to_string()
+                    }
+                }
+                RepoStatus::Indexing => {
+                    if colors {
+                        "◐".cyan().to_string()
+                    } else {
+                        "◐".to_string()
+                    }
+                }
+                RepoStatus::Error => {
+                    if colors {
+                        "!".red().to_string()
+                    } else {
+                        "!".to_string()
+                    }
+                }
             };
 
             // Format time ago
@@ -86,11 +111,28 @@ pub fn run(args: &Args) -> Result<()> {
         }
 
         println!();
-        println!("Status: {} ready  {} pending  {} indexing  {} error",
-            if colors { "●".green().to_string() } else { "●".to_string() },
-            if colors { "○".yellow().to_string() } else { "○".to_string() },
-            if colors { "◐".cyan().to_string() } else { "◐".to_string() },
-            if colors { "!".red().to_string() } else { "!".to_string() },
+        println!(
+            "Status: {} ready  {} pending  {} indexing  {} error",
+            if colors {
+                "●".green().to_string()
+            } else {
+                "●".to_string()
+            },
+            if colors {
+                "○".yellow().to_string()
+            } else {
+                "○".to_string()
+            },
+            if colors {
+                "◐".cyan().to_string()
+            } else {
+                "◐".to_string()
+            },
+            if colors {
+                "!".red().to_string()
+            } else {
+                "!".to_string()
+            },
         );
     }
 

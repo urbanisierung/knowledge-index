@@ -18,17 +18,35 @@ fn create_test_repo() -> tempfile::TempDir {
     let tmp = tempfile::tempdir().unwrap();
 
     // Create some test files
-    fs::write(tmp.path().join("README.md"), "# Test Project\n\nThis is a test project.").unwrap();
-    fs::write(tmp.path().join("main.rs"), "fn main() {\n    println!(\"Hello\");\n}").unwrap();
-    fs::write(tmp.path().join("lib.rs"), "pub fn greet(name: &str) -> String {\n    format!(\"Hello, {name}!\")\n}").unwrap();
+    fs::write(
+        tmp.path().join("README.md"),
+        "# Test Project\n\nThis is a test project.",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("main.rs"),
+        "fn main() {\n    println!(\"Hello\");\n}",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("lib.rs"),
+        "pub fn greet(name: &str) -> String {\n    format!(\"Hello, {name}!\")\n}",
+    )
+    .unwrap();
 
     // Create a subdirectory
     let src_dir = tmp.path().join("src");
     fs::create_dir(&src_dir).unwrap();
-    fs::write(src_dir.join("utils.rs"), "pub fn helper() -> i32 {\n    42\n}").unwrap();
+    fs::write(
+        src_dir.join("utils.rs"),
+        "pub fn helper() -> i32 {\n    42\n}",
+    )
+    .unwrap();
 
     // Create a markdown file with frontmatter
-    fs::write(tmp.path().join("notes.md"), r#"---
+    fs::write(
+        tmp.path().join("notes.md"),
+        r#"---
 title: My Notes
 tags: [test, notes]
 ---
@@ -40,7 +58,9 @@ Some [[wiki-link]] content here.
 ## Section 1
 
 More content.
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     tmp
 }

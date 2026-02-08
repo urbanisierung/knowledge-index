@@ -20,7 +20,11 @@ pub struct PlatformLimits {
 /// the given number of directories.
 ///
 /// On non-Linux systems, this always returns Ok with no warning.
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 pub fn check_inotify_limit(estimated_directories: usize) -> PlatformLimits {
     #[cfg(target_os = "linux")]
     {
@@ -114,7 +118,10 @@ fn count_directories_recursive(
 
         // Skip common large/unimportant directories
         let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if matches!(name, "node_modules" | ".git" | "target" | "build" | "dist" | ".cache") {
+        if matches!(
+            name,
+            "node_modules" | ".git" | "target" | "build" | "dist" | ".cache"
+        ) {
             // Estimate for these large dirs
             *count += 50;
             return Ok(());

@@ -11,11 +11,7 @@ use crate::error::{AppError, Result};
 use super::{print_success, print_warning, use_colors};
 
 #[allow(clippy::too_many_lines)]
-pub fn run(
-    path: Option<PathBuf>,
-    all: bool,
-    args: &Args,
-) -> Result<()> {
+pub fn run(path: Option<PathBuf>, all: bool, args: &Args) -> Result<()> {
     let colors = use_colors(args.no_color);
     let config = Config::load()?;
     let db = Database::open()?;
@@ -26,7 +22,10 @@ pub fn run(
 
         if repos.is_empty() {
             if !args.quiet && !args.json {
-                print_warning("No repositories indexed. Use 'index' command first.", colors);
+                print_warning(
+                    "No repositories indexed. Use 'index' command first.",
+                    colors,
+                );
             }
             return Ok(());
         }

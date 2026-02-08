@@ -367,7 +367,8 @@ fn extract_code_blocks(content: &str) -> Vec<CodeBlock> {
         };
 
         if let Some(fence_char) = fence {
-            let language = line.strip_prefix(fence_char)
+            let language = line
+                .strip_prefix(fence_char)
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.split_whitespace().next().unwrap_or(s).to_string());

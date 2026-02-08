@@ -84,7 +84,11 @@ impl App {
             db,
             config,
             searcher,
-            mode: if first_run { AppMode::Welcome } else { AppMode::Search },
+            mode: if first_run {
+                AppMode::Welcome
+            } else {
+                AppMode::Search
+            },
             should_quit: false,
             first_run,
             search_input: String::new(),

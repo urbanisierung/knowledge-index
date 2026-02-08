@@ -45,15 +45,11 @@ pub struct Indexer {
 
 // Binary file extensions to skip
 const BINARY_EXTENSIONS: &[&str] = &[
-    "exe", "dll", "so", "dylib", "bin", "obj", "o", "a", "lib",
-    "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp", "svg", "tiff",
-    "mp3", "mp4", "avi", "mov", "mkv", "wav", "flac", "ogg", "webm",
-    "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "iso",
-    "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-    "ttf", "otf", "woff", "woff2", "eot",
-    "pyc", "pyo", "class", "jar", "war",
-    "db", "sqlite", "sqlite3",
-    "lock", "sum",
+    "exe", "dll", "so", "dylib", "bin", "obj", "o", "a", "lib", "png", "jpg", "jpeg", "gif", "bmp",
+    "ico", "webp", "svg", "tiff", "mp3", "mp4", "avi", "mov", "mkv", "wav", "flac", "ogg", "webm",
+    "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "iso", "pdf", "doc", "docx", "xls", "xlsx",
+    "ppt", "pptx", "ttf", "otf", "woff", "woff2", "eot", "pyc", "pyo", "class", "jar", "war", "db",
+    "sqlite", "sqlite3", "lock", "sum",
 ];
 
 impl Indexer {
@@ -83,7 +79,12 @@ impl Indexer {
     }
 
     /// Index a directory
-    pub fn index<F>(&self, path: &Path, name: Option<String>, progress_callback: F) -> Result<IndexResult>
+    pub fn index<F>(
+        &self,
+        path: &Path,
+        name: Option<String>,
+        progress_callback: F,
+    ) -> Result<IndexResult>
     where
         F: Fn(&IndexProgress) + Send + Sync,
     {
@@ -109,7 +110,8 @@ impl Indexer {
         };
 
         // Set status to indexing
-        self.db.update_repository_status(repo.id, RepoStatus::Indexing)?;
+        self.db
+            .update_repository_status(repo.id, RepoStatus::Indexing)?;
 
         // Collect files
         let files = self.collect_files(&canonical);
@@ -163,7 +165,8 @@ impl Indexer {
         let file_count = (total_files - skipped.load(Ordering::Relaxed)) as i64;
         #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
-        self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
+        self.db
+            .update_repository_indexed(repo.id, file_count, total_bytes)?;
 
         #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         Ok(IndexResult {
@@ -184,7 +187,8 @@ impl Indexer {
     {
         let start = Instant::now();
 
-        self.db.update_repository_status(repo.id, RepoStatus::Indexing)?;
+        self.db
+            .update_repository_status(repo.id, RepoStatus::Indexing)?;
 
         // Get existing files
         let existing_files = self.db.get_repository_files(repo.id)?;
@@ -213,7 +217,9 @@ impl Indexer {
             let full_path = repo.path.join(path);
             if let Ok(metadata) = fs::metadata(&full_path) {
                 let existing = &existing_map[path];
-                let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
+                let mtime = metadata
+                    .modified()
+                    .map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
 
                 #[allow(clippy::cast_possible_wrap)]
                 let file_size = metadata.len() as i64;
@@ -283,7 +289,8 @@ impl Indexer {
         let file_count = (current_files.len() - skipped.load(Ordering::Relaxed)) as i64;
         #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
-        self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
+        self.db
+            .update_repository_indexed(repo.id, file_count, total_bytes)?;
 
         Ok(IndexResult {
             files_added: new_files.len() - skipped.load(Ordering::Relaxed),
@@ -389,7 +396,9 @@ impl Indexer {
             .map_or(FileType::Unknown, FileType::from_extension);
 
         // Get modification time
-        let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
+        let mtime = metadata
+            .modified()
+            .map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
 
         // Insert into database
         #[allow(clippy::cast_possible_wrap)]

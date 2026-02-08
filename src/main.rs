@@ -58,7 +58,17 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
             semantic,
             hybrid,
             lexical,
-        } => commands::search::run(query, repo, file_type, limit, group_by_repo, semantic, hybrid, lexical, args),
+        } => commands::search::run(
+            query,
+            repo,
+            file_type,
+            limit,
+            group_by_repo,
+            semantic,
+            hybrid,
+            lexical,
+            args,
+        ),
         Commands::List {} => commands::list::run(args),
         Commands::Update { path, all } => commands::update::run(path, all, args),
         Commands::Remove { path, force } => commands::remove::run(&path, force, args),
@@ -116,7 +126,8 @@ fn run_watcher(all: bool, path: Option<std::path::PathBuf>, args: &Args) -> Resu
     }
 
     if !args.quiet {
-        println!("Watching {} repositor{} for changes...",
+        println!(
+            "Watching {} repositor{} for changes...",
             repos.len(),
             if repos.len() == 1 { "y" } else { "ies" }
         );
@@ -162,8 +173,10 @@ fn run_watcher(all: bool, path: Option<std::path::PathBuf>, args: &Args) -> Resu
                 match indexer.index(&repo.path, Some(repo.name.clone()), |_| {}) {
                     Ok(result) => {
                         if !args.quiet {
-                            println!("  ✓ Re-indexed: {} added, {} updated, {} deleted",
-                                result.files_added, result.files_updated, result.files_deleted);
+                            println!(
+                                "  ✓ Re-indexed: {} added, {} updated, {} deleted",
+                                result.files_added, result.files_updated, result.files_deleted
+                            );
                         }
                     }
                     Err(e) => {

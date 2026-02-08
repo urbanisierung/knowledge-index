@@ -12,8 +12,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Search input
-            Constraint::Min(0),     // Results (and preview)
+            Constraint::Length(3), // Search input
+            Constraint::Min(0),    // Results (and preview)
         ])
         .split(area);
 
@@ -47,7 +47,9 @@ fn render_empty_state(frame: &mut Frame, app: &App, area: Rect) {
             Line::from(""),
             Line::from(Span::styled(
                 "Welcome to knowledge-index!",
-                Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan),
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::Cyan),
             )),
             Line::from(""),
             Line::from("Get started:"),
@@ -86,8 +88,8 @@ fn render_empty_state(frame: &mut Frame, app: &App, area: Rect) {
         ]
     };
 
-    let paragraph = Paragraph::new(content)
-        .block(Block::default().borders(Borders::ALL).title(" Results "));
+    let paragraph =
+        Paragraph::new(content).block(Block::default().borders(Borders::ALL).title(" Results "));
 
     frame.render_widget(paragraph, area);
 }
@@ -97,10 +99,22 @@ fn render_no_results(frame: &mut Frame, query: &str, area: Rect) {
         Line::from(""),
         Line::from(format!("No results for \"{query}\"")),
         Line::from(""),
-        Line::from(Span::styled("Suggestions:", Style::default().fg(Color::DarkGray))),
-        Line::from(Span::styled("  • Check spelling", Style::default().fg(Color::DarkGray))),
-        Line::from(Span::styled("  • Try broader search terms", Style::default().fg(Color::DarkGray))),
-        Line::from(Span::styled("  • Use prefix matching: func*", Style::default().fg(Color::DarkGray))),
+        Line::from(Span::styled(
+            "Suggestions:",
+            Style::default().fg(Color::DarkGray),
+        )),
+        Line::from(Span::styled(
+            "  • Check spelling",
+            Style::default().fg(Color::DarkGray),
+        )),
+        Line::from(Span::styled(
+            "  • Try broader search terms",
+            Style::default().fg(Color::DarkGray),
+        )),
+        Line::from(Span::styled(
+            "  • Use prefix matching: func*",
+            Style::default().fg(Color::DarkGray),
+        )),
     ];
 
     let paragraph = Paragraph::new(content)
@@ -141,12 +155,10 @@ fn render_results(frame: &mut Frame, app: &App, area: Rect) {
         })
         .collect();
 
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" Results ({}) [p]review ", app.search_results.len())),
-        );
+    let list = List::new(items).block(Block::default().borders(Borders::ALL).title(format!(
+        " Results ({}) [p]review ",
+        app.search_results.len()
+    )));
 
     frame.render_widget(list, area);
 }
@@ -155,10 +167,7 @@ fn render_results_with_preview(frame: &mut Frame, app: &App, area: Rect) {
     // Split horizontally: results on left, preview on right
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(40),
-            Constraint::Percentage(60),
-        ])
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(area);
 
     // Render compact results list
@@ -177,7 +186,9 @@ fn render_results_with_preview(frame: &mut Frame, app: &App, area: Rect) {
                 Span::styled(&result.repo_name, Style::default().fg(Color::Blue)),
                 Span::raw(":"),
                 Span::styled(
-                    result.file_path.file_name()
+                    result
+                        .file_path
+                        .file_name()
                         .map(|n| n.to_string_lossy().to_string())
                         .unwrap_or_default(),
                     Style::default().fg(Color::Cyan),
@@ -188,12 +199,11 @@ fn render_results_with_preview(frame: &mut Frame, app: &App, area: Rect) {
         })
         .collect();
 
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" Results ({}) ", app.search_results.len())),
-        );
+    let list = List::new(items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(format!(" Results ({}) ", app.search_results.len())),
+    );
 
     frame.render_widget(list, chunks[0]);
 
@@ -225,14 +235,12 @@ fn render_results_with_preview(frame: &mut Frame, app: &App, area: Rect) {
             .to_string()
     };
 
-    let preview = Paragraph::new(lines)
-        .wrap(Wrap { trim: false })
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" Preview: {selected_file} "))
-                .border_style(Style::default().fg(Color::Green)),
-        );
+    let preview = Paragraph::new(lines).wrap(Wrap { trim: false }).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(format!(" Preview: {selected_file} "))
+            .border_style(Style::default().fg(Color::Green)),
+    );
 
     frame.render_widget(preview, chunks[1]);
 }

@@ -124,7 +124,9 @@ impl Searcher {
         offset: usize,
     ) -> Result<Vec<UnifiedSearchResult>> {
         let escaped_query = Self::escape_fts_query(query);
-        let results = self.db.search(&escaped_query, repo, file_type, limit, offset)?;
+        let results = self
+            .db
+            .search(&escaped_query, repo, file_type, limit, offset)?;
         Ok(results.into_iter().map(UnifiedSearchResult::from).collect())
     }
 
@@ -137,11 +139,16 @@ impl Searcher {
         limit: usize,
     ) -> Result<Vec<UnifiedSearchResult>> {
         let embedder = self.embedder.as_ref().ok_or_else(|| {
-            crate::error::AppError::Config("Semantic search requires embeddings. Enable with: enable_semantic_search = true".into())
+            crate::error::AppError::Config(
+                "Semantic search requires embeddings. Enable with: enable_semantic_search = true"
+                    .into(),
+            )
         })?;
 
         let query_embedding = embedder.embed_query(query)?;
-        let results = self.db.vector_search(&query_embedding, repo, file_type, limit)?;
+        let results = self
+            .db
+            .vector_search(&query_embedding, repo, file_type, limit)?;
         Ok(results.into_iter().map(UnifiedSearchResult::from).collect())
     }
 
@@ -162,7 +169,8 @@ impl Searcher {
 
         // Calculate RRF scores
         let mut scores: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
-        let mut result_map: std::collections::HashMap<String, UnifiedSearchResult> = std::collections::HashMap::new();
+        let mut result_map: std::collections::HashMap<String, UnifiedSearchResult> =
+            std::collections::HashMap::new();
 
         for (rank, result) in lexical_results.into_iter().enumerate() {
             let key = result.absolute_path.to_string_lossy().to_string();
@@ -208,17 +216,13 @@ impl Searcher {
     ) -> Result<Vec<SearchResult>> {
         // Escape special FTS5 characters in query
         let escaped_query = Self::escape_fts_query(query);
-        self.db.search(&escaped_query, repo, file_type, limit, offset)
+        self.db
+            .search(&escaped_query, repo, file_type, limit, offset)
     }
 
     /// Count total results
     #[allow(dead_code)]
-    pub fn count(
-        &self,
-        query: &str,
-        repo: Option<&str>,
-        file_type: Option<&str>,
-    ) -> Result<i64> {
+    pub fn count(&self, query: &str, repo: Option<&str>, file_type: Option<&str>) -> Result<i64> {
         let escaped_query = Self::escape_fts_query(query);
         self.db.search_count(&escaped_query, repo, file_type)
     }
@@ -282,7 +286,10 @@ mod tests {
     #[test]
     fn test_escape_fts_query_quoted() {
         // Quoted phrases should be preserved
-        assert_eq!(Searcher::escape_fts_query("\"exact phrase\""), "\"exact phrase\"");
+        assert_eq!(
+            Searcher::escape_fts_query("\"exact phrase\""),
+            "\"exact phrase\""
+        );
     }
 
     #[test]

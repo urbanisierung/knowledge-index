@@ -26,39 +26,39 @@ pub fn run(key: Option<String>, value: Option<String>, reset: bool, args: &Args)
             let mut config = Config::load()?;
             match key.as_str() {
                 "max_file_size_mb" => {
-                    config.max_file_size_mb = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid number".into())
-                    })?;
+                    config.max_file_size_mb = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid number".into()))?;
                 }
                 "color_enabled" => {
-                    config.color_enabled = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid boolean".into())
-                    })?;
+                    config.color_enabled = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid boolean".into()))?;
                 }
                 "watcher_debounce_ms" => {
-                    config.watcher_debounce_ms = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid number".into())
-                    })?;
+                    config.watcher_debounce_ms = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid number".into()))?;
                 }
                 "batch_size" => {
-                    config.batch_size = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid number".into())
-                    })?;
+                    config.batch_size = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid number".into()))?;
                 }
                 "enable_semantic_search" => {
-                    config.enable_semantic_search = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid boolean".into())
-                    })?;
+                    config.enable_semantic_search = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid boolean".into()))?;
                 }
                 "strip_markdown_syntax" => {
-                    config.strip_markdown_syntax = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid boolean".into())
-                    })?;
+                    config.strip_markdown_syntax = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid boolean".into()))?;
                 }
                 "index_code_blocks" => {
-                    config.index_code_blocks = value.parse().map_err(|_| {
-                        crate::error::AppError::Other("Invalid boolean".into())
-                    })?;
+                    config.index_code_blocks = value
+                        .parse()
+                        .map_err(|_| crate::error::AppError::Other("Invalid boolean".into()))?;
                 }
                 "embedding_model" => {
                     config.embedding_model.clone_from(&value);
@@ -66,7 +66,7 @@ pub fn run(key: Option<String>, value: Option<String>, reset: bool, args: &Args)
                 "default_search_mode" => {
                     if !["lexical", "semantic", "hybrid"].contains(&value.as_str()) {
                         return Err(crate::error::AppError::Other(
-                            "Invalid search mode. Must be: lexical, semantic, or hybrid".into()
+                            "Invalid search mode. Must be: lexical, semantic, or hybrid".into(),
                         ));
                     }
                     config.default_search_mode.clone_from(&value);

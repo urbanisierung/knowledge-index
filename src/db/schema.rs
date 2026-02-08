@@ -30,10 +30,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
         Some(v) if v < SCHEMA_VERSION => {
             // Run migrations
             migrate(conn, v)?;
-            conn.execute(
-                "UPDATE schema_version SET version = ?1",
-                [SCHEMA_VERSION],
-            )?;
+            conn.execute("UPDATE schema_version SET version = ?1", [SCHEMA_VERSION])?;
         }
         _ => {
             // Schema is up to date

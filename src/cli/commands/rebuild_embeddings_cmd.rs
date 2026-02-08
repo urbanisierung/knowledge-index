@@ -20,10 +20,7 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
     // Check if semantic search is enabled
     if !config.enable_semantic_search {
         if colors {
-            eprintln!(
-                "{} Semantic search is not enabled.",
-                "Error:".red()
-            );
+            eprintln!("{} Semantic search is not enabled.", "Error:".red());
             eprintln!(
                 "  Enable it in config: {}",
                 "enable_semantic_search = true".cyan()
@@ -74,7 +71,10 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
     // Get repositories to process
     let repos = db.list_repositories()?;
     let repos_to_process: Vec<_> = if let Some(ref filter) = repo_filter {
-        repos.into_iter().filter(|r| r.name.contains(filter)).collect()
+        repos
+            .into_iter()
+            .filter(|r| r.name.contains(filter))
+            .collect()
     } else {
         repos
     };
@@ -83,7 +83,11 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
         if !args.quiet {
             if let Some(filter) = repo_filter {
                 if colors {
-                    println!("{} No repositories matching \"{}\"", "!".yellow(), filter.cyan());
+                    println!(
+                        "{} No repositories matching \"{}\"",
+                        "!".yellow(),
+                        filter.cyan()
+                    );
                 } else {
                     println!("No repositories matching \"{filter}\"");
                 }
@@ -106,7 +110,12 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
 
         if !args.quiet {
             if colors {
-                println!("{} Processing {} ({} files)...", "→".blue(), repo.name.cyan(), file_count);
+                println!(
+                    "{} Processing {} ({} files)...",
+                    "→".blue(),
+                    repo.name.cyan(),
+                    file_count
+                );
             } else {
                 println!("Processing {} ({} files)...", repo.name, file_count);
             }
@@ -176,7 +185,11 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
                 if total_files == 1 { "" } else { "s" },
                 total_embeddings.to_string().green(),
                 repos_to_process.len().to_string().green(),
-                if repos_to_process.len() == 1 { "y" } else { "ies" }
+                if repos_to_process.len() == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
             );
         } else {
             println!();
@@ -185,7 +198,11 @@ pub fn run(repo_filter: Option<String>, args: &Args) -> Result<()> {
                 total_files,
                 total_embeddings,
                 repos_to_process.len(),
-                if repos_to_process.len() == 1 { "y" } else { "ies" }
+                if repos_to_process.len() == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
             );
         }
     }
