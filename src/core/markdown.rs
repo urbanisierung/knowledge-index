@@ -491,7 +491,7 @@ fn strip_line(line: &str) -> String {
     result
 }
 
-/// Strip markdown links [text](url) -> text
+/// Strip markdown links \[text\](url) -> text
 #[allow(dead_code)]
 fn strip_markdown_links(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
@@ -529,7 +529,7 @@ fn strip_markdown_links(text: &str) -> String {
     result
 }
 
-/// Strip wiki links [[link|display]] -> display, [[link]] -> link
+/// Strip wiki links \[\[link|display\]\] -> display, \[\[link\]\] -> link
 #[allow(dead_code)]
 fn strip_wiki_links(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
