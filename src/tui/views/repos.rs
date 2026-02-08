@@ -34,8 +34,11 @@ fn render_empty(frame: &mut Frame, area: Rect) {
         )),
     ];
 
-    let paragraph = Paragraph::new(content)
-        .block(Block::default().borders(Borders::ALL).title(" Repositories "));
+    let paragraph = Paragraph::new(content).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Repositories "),
+    );
 
     frame.render_widget(paragraph, area);
 }

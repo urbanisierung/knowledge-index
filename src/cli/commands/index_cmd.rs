@@ -20,10 +20,7 @@ pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
 
     if !args.quiet && !args.json {
         if colors {
-            println!(
-                "Indexing {}...",
-                canonical.display().to_string().cyan()
-            );
+            println!("Indexing {}...", canonical.display().to_string().cyan());
         } else {
             println!("Indexing {}...", canonical.display());
         }
@@ -62,10 +59,13 @@ pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
         if let Some(pb) = &progress_bar {
             pb.set_length(progress.total_files as u64);
             pb.set_position(progress.processed_files as u64);
-            
+
             // Truncate filename for display
             let display_file = if progress.current_file.len() > 40 {
-                format!("...{}", &progress.current_file[progress.current_file.len() - 37..])
+                format!(
+                    "...{}",
+                    &progress.current_file[progress.current_file.len() - 37..]
+                )
             } else {
                 progress.current_file.clone()
             };
@@ -95,7 +95,7 @@ pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
         );
     } else if !args.quiet {
         let total_files = result.files_added + result.files_updated + result.files_unchanged;
-        
+
         if colors {
             print_success(
                 &format!(
@@ -106,7 +106,10 @@ pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
                 true,
             );
         } else {
-            print_success(&format!("Indexed {total_files} files in {:.1}s", result.elapsed_secs), false);
+            print_success(
+                &format!("Indexed {total_files} files in {:.1}s", result.elapsed_secs),
+                false,
+            );
         }
 
         // Show details
@@ -127,7 +130,11 @@ pub fn run(path: &Path, name: Option<String>, args: &Args) -> Result<()> {
         println!();
         println!("What's next:");
         if colors {
-            println!("  {} Search: {}", "•".dimmed(), "knowledge-index search \"your query\"".cyan());
+            println!(
+                "  {} Search: {}",
+                "•".dimmed(),
+                "knowledge-index search \"your query\"".cyan()
+            );
             println!("  {} Browse: {}", "•".dimmed(), "knowledge-index".cyan());
         } else {
             println!("  • Search: knowledge-index search \"your query\"");

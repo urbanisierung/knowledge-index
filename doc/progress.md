@@ -4,6 +4,116 @@
 
 ### 2026-02-08
 
+- **Fixed CI Pipeline Issues**
+  - Updated MSRV from 1.75 to 1.85 (required for edition2024 in ort-sys dependency)
+  - Fixed `cargo fmt` check syntax in CI workflow
+  - Updated Cargo.toml rust-version to 1.85
+  - Updated CI workflow MSRV job to use dtolnay/rust-toolchain@1.85.0
+
+- **Implemented Phase 10: Polish and Release**
+  - Cargo.toml Metadata
+    - Added rust-version (MSRV 1.85)
+    - Added homepage, documentation URLs
+    - Added exclude patterns for packaging
+    - Added text-processing category
+  - Unit Tests
+    - Config module tests (defaults, serialization, partial parsing)
+    - Searcher module tests (FTS escaping, search modes)
+    - 18 unit tests total, all passing
+  - Integration Tests
+    - CLI help and version tests
+    - Config, list, search command tests
+    - Full index/search cycle test (optional)
+  - CI Pipeline (.github/workflows/ci.yml)
+    - Multi-platform testing (Linux, macOS, Windows)
+    - Rust stable and beta channels
+    - MSRV check (1.85)
+    - Format check, clippy lints, doc tests
+    - Publish dry-run verification
+  - Release Workflow (.github/workflows/release.yml)
+    - Cross-platform binary builds
+    - Archive creation (tar.gz, zip)
+    - Checksum generation
+    - GitHub release automation
+    - crates.io publish on stable tags
+  - MIT LICENSE file added
+  - cargo publish --dry-run verified
+
+- **Implemented Low Priority Optional Features**
+  - Welcome Screen (First Run)
+    - Detects when no repositories are indexed
+    - Shows getting started guide
+    - Press Enter to continue, q to quit
+  - Debug Mode (`--debug` flag)
+    - Enables `RUST_BACKTRACE=1` for detailed error traces
+    - Shows hint to use --debug on errors
+  - Shell Aliases
+    - Added suggested aliases to --help output (ki, kis, kii)
+  - Markdown Syntax Stripping
+    - New config option `strip_markdown_syntax`
+    - Strips headers, bold/italic, links, blockquotes
+    - Preserves code block content
+  - Code Block Indexing
+    - New config option `index_code_blocks`
+    - Extracts code blocks with language tags
+    - Useful for searching by programming language
+  - Extended Config Command
+    - All new config options accessible via CLI
+    - Added: enable_semantic_search, embedding_model, default_search_mode
+    - Added: strip_markdown_syntax, index_code_blocks
+
+- **Implemented Medium Priority Optional Features**
+  - TUI Preview Pane
+    - Toggle with 'p' key in Search view
+    - Shows file content with line numbers
+    - Scroll with j/k in preview mode
+    - Horizontal split: 40% results, 60% preview
+  - Loading State Overlay
+    - Animated spinner during operations
+    - Centered overlay with message
+    - Loading state management in App
+  - Delete Confirmation Dialog
+    - Modal dialog before repository deletion
+    - Press 'y' to confirm, 'n'/Esc to cancel
+    - Confirmation action system in App
+  - Platform Limits Check
+    - Linux inotify watch limit detection
+    - Warns before starting file watcher
+    - Estimates directory count for watched repos
+    - Instructions for increasing limits
+
+- **Implemented Priority Optional Features**
+  - Added `--group-by-repo` flag to search command
+    - Groups search results by repository in both CLI and JSON output
+    - Shows repository headers with result counts
+  - Added YAML frontmatter parsing for markdown files
+    - Extracts title, tags from frontmatter
+    - Stores in `markdown_meta` table
+  - Added heading extraction from markdown files
+    - Parses ATX-style headings (# through ######)
+    - Stores heading hierarchy in database
+  - Added wiki-link extraction (`[[link]]` and `[[link|display]]`)
+  - Added `rebuild-embeddings` command
+    - Regenerates embeddings without full re-index
+    - Supports `--repo` filter for specific repositories
+    - Shows progress indicator during processing
+  - Added `watch` command for file system monitoring
+    - Watches indexed repositories for changes
+    - Automatic re-indexing on file changes
+  - Added progress indicator for embedding generation
+    - Shows file count progress during rebuild
+
+- **Roadmap Review and Cleanup**
+  - Verified all previously implemented items in Phases 1-7 and marked as checked
+  - Marked optional/future items with *(Optional)*, *(Future)*, or *(Pre-release)* tags
+  - Terminal setup/teardown (Part 4.1) was already implemented - marked complete
+  - Size warning message (Part 4.2) was already implemented - marked complete
+  - Keyboard shortcuts in status bar (Part 4.12) already implemented - marked complete
+  - Accessibility features (visual, motor, cognitive) already implemented - marked complete
+  - Documentation items (README, doc/ files, inline docs) already complete - marked complete
+  - Marked Phase 9 Remote items as *(Future)* since they are intentionally deferred
+  - Marked Phase 10 Polish items as *(Pre-release)* or *(Optional)* appropriately
+
 - **Implemented Phase 8: Vector Search (Semantic Search)**
   - Added `fastembed` crate (v5) for local embedding generation
   - Uses all-MiniLM-L6-v2 model (384 dimensions, ~22MB)

@@ -19,27 +19,41 @@ pub fn render(frame: &mut Frame, area: Rect) {
     let help_text = vec![
         Line::from(Span::styled(
             "Keyboard Shortcuts",
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Cyan),
         )),
         Line::from(""),
-        Line::from(Span::styled("Global", Style::default().add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "Global",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
         Line::from("  ?           Toggle this help"),
         Line::from("  q           Quit application"),
         Line::from("  Ctrl+C      Force quit"),
         Line::from("  Tab         Switch between views"),
         Line::from(""),
-        Line::from(Span::styled("Navigation", Style::default().add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "Navigation",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
         Line::from("  ↑/k         Move up"),
         Line::from("  ↓/j         Move down"),
         Line::from("  Enter       Select / Open file"),
         Line::from("  Esc         Clear / Go back"),
         Line::from(""),
-        Line::from(Span::styled("Search View", Style::default().add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "Search View",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
         Line::from("  Type        Start searching"),
         Line::from("  Ctrl+U      Clear search"),
         Line::from("  o           Open in editor"),
         Line::from(""),
-        Line::from(Span::styled("Repos View", Style::default().add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "Repos View",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
         Line::from("  d           Delete from index"),
         Line::from("  r           Refresh list"),
         Line::from(""),

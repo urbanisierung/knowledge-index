@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::Instant;
 
 use crate::config::Config;
-use crate::core::Embedder;
+use crate::core::{parse_markdown, Embedder};
 use crate::db::{Database, FileRecord, FileType, RepoStatus, Repository};
 use crate::error::{AppError, Result};
 
@@ -45,15 +45,11 @@ pub struct Indexer {
 
 // Binary file extensions to skip
 const BINARY_EXTENSIONS: &[&str] = &[
-    "exe", "dll", "so", "dylib", "bin", "obj", "o", "a", "lib",
-    "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp", "svg", "tiff",
-    "mp3", "mp4", "avi", "mov", "mkv", "wav", "flac", "ogg", "webm",
-    "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "iso",
-    "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-    "ttf", "otf", "woff", "woff2", "eot",
-    "pyc", "pyo", "class", "jar", "war",
-    "db", "sqlite", "sqlite3",
-    "lock", "sum",
+    "exe", "dll", "so", "dylib", "bin", "obj", "o", "a", "lib", "png", "jpg", "jpeg", "gif", "bmp",
+    "ico", "webp", "svg", "tiff", "mp3", "mp4", "avi", "mov", "mkv", "wav", "flac", "ogg", "webm",
+    "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "iso", "pdf", "doc", "docx", "xls", "xlsx",
+    "ppt", "pptx", "ttf", "otf", "woff", "woff2", "eot", "pyc", "pyo", "class", "jar", "war", "db",
+    "sqlite", "sqlite3", "lock", "sum",
 ];
 
 impl Indexer {
@@ -83,12 +79,17 @@ impl Indexer {
     }
 
     /// Index a directory
-    pub fn index<F>(&self, path: &Path, name: Option<String>, progress_callback: F) -> Result<IndexResult>
+    pub fn index<F>(
+        &self,
+        path: &Path,
+        name: Option<String>,
+        progress_callback: F,
+    ) -> Result<IndexResult>
     where
         F: Fn(&IndexProgress) + Send + Sync,
     {
         let start = Instant::now();
-        
+
         // Validate path
         if !path.exists() {
             return Err(AppError::PathNotFound(path.to_path_buf()));
@@ -109,7 +110,8 @@ impl Indexer {
         };
 
         // Set status to indexing
-        self.db.update_repository_status(repo.id, RepoStatus::Indexing)?;
+        self.db
+            .update_repository_status(repo.id, RepoStatus::Indexing)?;
 
         // Collect files
         let files = self.collect_files(&canonical);
@@ -122,11 +124,11 @@ impl Indexer {
 
         // Process files
         self.db.begin_batch()?;
-        
+
         let mut batch_count = 0;
         for file_path in &files {
             let relative = file_path.strip_prefix(&canonical).unwrap_or(file_path);
-            
+
             // Update progress
             let current_processed = processed.fetch_add(1, Ordering::Relaxed) + 1;
             progress_callback(&IndexProgress {
@@ -143,7 +145,7 @@ impl Indexer {
                 Ok(size) => {
                     bytes_processed.fetch_add(size, Ordering::Relaxed);
                     batch_count += 1;
-                    
+
                     if batch_count >= self.config.batch_size {
                         self.db.commit_batch()?;
                         self.db.begin_batch()?;
@@ -163,7 +165,8 @@ impl Indexer {
         let file_count = (total_files - skipped.load(Ordering::Relaxed)) as i64;
         #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
-        self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
+        self.db
+            .update_repository_indexed(repo.id, file_count, total_bytes)?;
 
         #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         Ok(IndexResult {
@@ -183,8 +186,9 @@ impl Indexer {
         F: Fn(&IndexProgress) + Send + Sync,
     {
         let start = Instant::now();
-        
-        self.db.update_repository_status(repo.id, RepoStatus::Indexing)?;
+
+        self.db
+            .update_repository_status(repo.id, RepoStatus::Indexing)?;
 
         // Get existing files
         let existing_files = self.db.get_repository_files(repo.id)?;
@@ -205,16 +209,18 @@ impl Indexer {
         // Determine changes
         let deleted: Vec<_> = existing_paths.difference(&current_paths).cloned().collect();
         let new_files: Vec<_> = current_paths.difference(&existing_paths).cloned().collect();
-        
+
         let mut modified = Vec::new();
         let mut unchanged = Vec::new();
-        
+
         for path in current_paths.intersection(&existing_paths) {
             let full_path = repo.path.join(path);
             if let Ok(metadata) = fs::metadata(&full_path) {
                 let existing = &existing_map[path];
-                let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
-                
+                let mtime = metadata
+                    .modified()
+                    .map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
+
                 #[allow(clippy::cast_possible_wrap)]
                 let file_size = metadata.len() as i64;
                 if mtime > existing.last_modified_at || file_size != existing.file_size_bytes {
@@ -243,7 +249,7 @@ impl Indexer {
 
         for relative_path in new_files.iter().chain(modified.iter()) {
             let full_path = repo.path.join(relative_path);
-            
+
             let current_processed = processed.fetch_add(1, Ordering::Relaxed) + 1;
             progress_callback(&IndexProgress {
                 total_files: total_to_process,
@@ -263,7 +269,7 @@ impl Indexer {
                 Ok(size) => {
                     bytes_processed.fetch_add(size, Ordering::Relaxed);
                     batch_count += 1;
-                    
+
                     if batch_count >= self.config.batch_size {
                         self.db.commit_batch()?;
                         self.db.begin_batch()?;
@@ -283,7 +289,8 @@ impl Indexer {
         let file_count = (current_files.len() - skipped.load(Ordering::Relaxed)) as i64;
         #[allow(clippy::cast_possible_wrap)]
         let total_bytes = bytes_processed.load(Ordering::Relaxed) as i64;
-        self.db.update_repository_indexed(repo.id, file_count, total_bytes)?;
+        self.db
+            .update_repository_indexed(repo.id, file_count, total_bytes)?;
 
         Ok(IndexResult {
             files_added: new_files.len() - skipped.load(Ordering::Relaxed),
@@ -314,7 +321,7 @@ impl Indexer {
 
         for entry in builder.build().flatten() {
             let path = entry.path();
-            
+
             if path.is_file() && self.should_index(path) {
                 files.push(path.to_path_buf());
             }
@@ -354,12 +361,12 @@ impl Indexer {
     /// Process a single file
     fn process_file(&self, root: &Path, path: &Path, repo_id: i64) -> Result<u64> {
         let relative = path.strip_prefix(root).unwrap_or(path);
-        
+
         // Read file
         let mut file = File::open(path)?;
         let metadata = file.metadata()?;
         let size = metadata.len();
-        
+
         // Check size limit
         if size > self.config.max_file_size_bytes() {
             return Err(AppError::Other("File too large".into()));
@@ -389,11 +396,13 @@ impl Indexer {
             .map_or(FileType::Unknown, FileType::from_extension);
 
         // Get modification time
-        let mtime = metadata.modified().map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
+        let mtime = metadata
+            .modified()
+            .map_or_else(|_| Utc::now(), DateTime::<Utc>::from);
 
         // Insert into database
         #[allow(clippy::cast_possible_wrap)]
-        self.db.insert_file(
+        let file_id = self.db.insert_file(
             repo_id,
             relative,
             &hash_str,
@@ -403,31 +412,38 @@ impl Indexer {
             &content_str,
         )?;
 
+        // Parse and store markdown metadata if it's a markdown file
+        if file_type == FileType::Markdown {
+            let meta = parse_markdown(&content_str);
+            let _ = self.db.store_markdown_meta(
+                file_id,
+                meta.title.as_deref(),
+                &meta.tags_json(),
+                &meta.links_json(),
+                &meta.headings_json(),
+            );
+        }
+
         // Generate and store embeddings if enabled
         if let Some(ref embedder) = self.embedder {
-            // Get the file_id we just inserted
-            if let Ok(files) = self.db.get_repository_files(repo_id) {
-                if let Some(file_record) = files.iter().find(|f| f.relative_path == relative) {
-                    // Generate embeddings for chunks
-                    if let Ok(chunk_embeddings) = embedder.embed_content(&content_str) {
-                        let embeddings: Vec<(usize, usize, usize, &str, &[f32])> = chunk_embeddings
-                            .iter()
-                            .enumerate()
-                            .map(|(idx, ce)| {
-                                (
-                                    idx,
-                                    ce.chunk.start_offset,
-                                    ce.chunk.end_offset,
-                                    ce.chunk.text.as_str(),
-                                    ce.embedding.as_slice(),
-                                )
-                            })
-                            .collect();
+            // Generate embeddings for chunks
+            if let Ok(chunk_embeddings) = embedder.embed_content(&content_str) {
+                let embeddings: Vec<(usize, usize, usize, &str, &[f32])> = chunk_embeddings
+                    .iter()
+                    .enumerate()
+                    .map(|(idx, ce)| {
+                        (
+                            idx,
+                            ce.chunk.start_offset,
+                            ce.chunk.end_offset,
+                            ce.chunk.text.as_str(),
+                            ce.embedding.as_slice(),
+                        )
+                    })
+                    .collect();
 
-                        // Store embeddings (ignore errors to not block indexing)
-                        let _ = self.db.store_embeddings(file_record.id, &embeddings);
-                    }
-                }
+                // Store embeddings (ignore errors to not block indexing)
+                let _ = self.db.store_embeddings(file_id, &embeddings);
             }
         }
 

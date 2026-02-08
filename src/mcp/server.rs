@@ -95,19 +95,18 @@ pub struct GetContextRequest {
 #[tool(tool_box)]
 impl KnowledgeIndexMcp {
     /// Search indexed content across all repositories.
-    #[tool(description = "Search indexed code and knowledge repositories for relevant content. Supports lexical (default), semantic (vector), or hybrid search modes.")]
+    #[tool(
+        description = "Search indexed code and knowledge repositories for relevant content. Supports lexical (default), semantic (vector), or hybrid search modes."
+    )]
     async fn search(&self, #[tool(aggr)] req: SearchRequest) -> String {
         let limit = req.limit.unwrap_or(10).min(50) as usize;
         let db = self.db.lock().await;
 
         // Determine search mode
-        let search_mode = req
-            .mode
-            .as_deref()
-            .map_or_else(
-                || SearchMode::from_str(&self.config.default_search_mode),
-                SearchMode::from_str,
-            );
+        let search_mode = req.mode.as_deref().map_or_else(
+            || SearchMode::from_str(&self.config.default_search_mode),
+            SearchMode::from_str,
+        );
 
         // Create searcher with embedder if needed
         let searcher = if (search_mode == SearchMode::Semantic || search_mode == SearchMode::Hybrid)
@@ -122,7 +121,8 @@ impl KnowledgeIndexMcp {
         };
 
         // Use lexical if semantic requested but not available
-        let effective_mode = if (search_mode == SearchMode::Semantic || search_mode == SearchMode::Hybrid)
+        let effective_mode = if (search_mode == SearchMode::Semantic
+            || search_mode == SearchMode::Hybrid)
             && !searcher.has_semantic_search()
         {
             SearchMode::Lexical
@@ -169,7 +169,8 @@ impl KnowledgeIndexMcp {
             },
         };
 
-        serde_json::to_string_pretty(&response).unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"))
+        serde_json::to_string_pretty(&response)
+            .unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"))
     }
 
     /// List all indexed repositories.
@@ -199,7 +200,8 @@ impl KnowledgeIndexMcp {
             total,
         };
 
-        serde_json::to_string_pretty(&response).unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"))
+        serde_json::to_string_pretty(&response)
+            .unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"))
     }
 
     /// Get full content of a file.
@@ -297,10 +299,14 @@ pub async fn run_mcp_server(db: Database, config: Config) -> crate::error::Resul
     // Log to stderr only (stdout is for MCP protocol)
     eprintln!("Starting knowledge-index MCP server...");
 
-    let service = server.serve(rmcp::transport::io::stdio()).await
+    let service = server
+        .serve(rmcp::transport::io::stdio())
+        .await
         .map_err(|e| crate::error::AppError::Other(format!("MCP server error: {e}")))?;
 
-    service.waiting().await
+    service
+        .waiting()
+        .await
         .map_err(|e| crate::error::AppError::Other(format!("MCP server error: {e}")))?;
 
     Ok(())

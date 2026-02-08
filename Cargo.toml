@@ -2,12 +2,21 @@
 name = "knowledge-index"
 version = "0.1.0"
 edition = "2021"
-description = "A CLI application for indexing and searching code repositories and knowledge bases"
+rust-version = "1.88"
+description = "A CLI application for indexing and searching code repositories and knowledge bases for AI-powered workflows"
 authors = ["urbanisierung"]
 license = "MIT"
 repository = "https://github.com/urbanisierung/knowledge-index"
+homepage = "https://github.com/urbanisierung/knowledge-index"
+documentation = "https://github.com/urbanisierung/knowledge-index/blob/main/doc/documentation.md"
+readme = "README.md"
 keywords = ["cli", "search", "index", "knowledge", "ai"]
-categories = ["command-line-utilities", "development-tools"]
+categories = ["command-line-utilities", "development-tools", "text-processing"]
+exclude = [
+    ".github/",
+    "target/",
+    "*.db",
+]
 
 [dependencies]
 # CLI
@@ -49,6 +58,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 owo-colors = "4"
 indicatif = "0.17"
 atty = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints.clippy]
 all = "warn"

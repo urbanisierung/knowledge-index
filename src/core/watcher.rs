@@ -54,8 +54,10 @@ pub struct IndexWatcher {
 impl IndexWatcher {
     /// Create a new watcher instance.
     pub fn new(config: Arc<AppConfig>) -> Result<Self> {
-        let (tx, rx): (Sender<notify::Result<Event>>, Receiver<notify::Result<Event>>) =
-            mpsc::channel();
+        let (tx, rx): (
+            Sender<notify::Result<Event>>,
+            Receiver<notify::Result<Event>>,
+        ) = mpsc::channel();
 
         let watcher = RecommendedWatcher::new(
             move |res| {
@@ -110,7 +112,9 @@ impl IndexWatcher {
         if let Ok(mut pending) = self.pending_changes.lock() {
             let ready_paths: Vec<PathBuf> = pending
                 .iter()
-                .filter(|(_, change)| now.duration_since(change.detected_at) >= self.debounce_duration)
+                .filter(|(_, change)| {
+                    now.duration_since(change.detected_at) >= self.debounce_duration
+                })
                 .map(|(path, _)| path.clone())
                 .collect();
 
@@ -135,10 +139,7 @@ impl IndexWatcher {
 
     /// Get count of pending changes.
     pub fn pending_count(&self) -> usize {
-        self.pending_changes
-            .lock()
-            .map(|p| p.len())
-            .unwrap_or(0)
+        self.pending_changes.lock().map(|p| p.len()).unwrap_or(0)
     }
 
     /// Process a single notify event.

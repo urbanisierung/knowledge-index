@@ -12,6 +12,7 @@ pub const DATABASE_FILE_NAME: &str = "index.db";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     /// Maximum file size in MB to index (files larger are skipped)
     pub max_file_size_mb: u32,
@@ -29,6 +30,10 @@ pub struct Config {
     pub embedding_model: String,
     /// Default search mode: "lexical", "semantic", or "hybrid"
     pub default_search_mode: String,
+    /// Strip markdown syntax from indexed content for cleaner FTS
+    pub strip_markdown_syntax: bool,
+    /// Index code blocks with their language tags
+    pub index_code_blocks: bool,
 }
 
 impl Default for Config {
@@ -50,6 +55,8 @@ impl Default for Config {
             enable_semantic_search: false,
             embedding_model: String::from("all-MiniLM-L6-v2"),
             default_search_mode: String::from("lexical"),
+            strip_markdown_syntax: false,
+            index_code_blocks: true,
         }
     }
 }
@@ -107,5 +114,56 @@ impl Config {
     #[must_use]
     pub fn max_file_size_bytes(&self) -> u64 {
         u64::from(self.max_file_size_mb) * 1024 * 1024
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_config() {
+        let config = Config::default();
+        assert_eq!(config.max_file_size_mb, 10);
+        assert!(config.ignore_patterns.contains(&".git".to_string()));
+        assert!(config.color_enabled);
+        assert_eq!(config.batch_size, 100);
+        assert!(!config.enable_semantic_search);
+        assert_eq!(config.default_search_mode, "lexical");
+    }
+
+    #[test]
+    fn test_max_file_size_bytes() {
+        let config = Config::default();
+        assert_eq!(config.max_file_size_bytes(), 10 * 1024 * 1024);
+
+        let mut config = Config::default();
+        config.max_file_size_mb = 5;
+        assert_eq!(config.max_file_size_bytes(), 5 * 1024 * 1024);
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = Config::default();
+        let toml_str = toml::to_string_pretty(&config).unwrap();
+        assert!(toml_str.contains("max_file_size_mb"));
+        assert!(toml_str.contains("ignore_patterns"));
+
+        // Round-trip
+        let parsed: Config = toml::from_str(&toml_str).unwrap();
+        assert_eq!(parsed.max_file_size_mb, config.max_file_size_mb);
+        assert_eq!(parsed.batch_size, config.batch_size);
+    }
+
+    #[test]
+    fn test_config_partial_parsing() {
+        // Config should use defaults for missing fields
+        let partial_toml = r#"
+            max_file_size_mb = 20
+        "#;
+        let config: Config = toml::from_str(partial_toml).unwrap();
+        assert_eq!(config.max_file_size_mb, 20);
+        assert_eq!(config.batch_size, 100); // default
+        assert!(config.color_enabled); // default
     }
 }
