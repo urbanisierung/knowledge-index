@@ -2,6 +2,23 @@
 
 ## Changelog
 
+### 2026-02-09
+
+- **Added Local CI Scripts (Makefile)**
+  - Created `Makefile` with Docker-based CI commands
+  - `make ci` runs full CI pipeline matching GitHub Actions
+  - `make ci-quick` runs format and clippy checks only
+  - `make ci-msrv` checks minimum supported Rust version (1.88)
+  - Individual steps: `make ci-format`, `make ci-clippy`, `make ci-test`, `make ci-doc`
+  - Local development commands: `make build`, `make release`, `make test`, `make fmt`, `make lint`
+  - Updated README.md with development section
+
+- **Fixed Additional CI Issues**
+  - Updated MSRV to 1.88 (required by darling, ort-sys dependencies)
+  - Fixed clippy warnings: `field_reassign_with_default`, `needless_raw_string_hashes`
+  - Fixed `#[ignore]` without reason in integration tests
+  - Removed `cargo test --doc` step (binary-only crate, no lib.rs)
+
 ### 2026-02-08
 
 - **Fixed CI Pipeline Issues**
