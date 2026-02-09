@@ -45,12 +45,14 @@ Launches the full-screen interactive interface.
 |-----|--------|
 | `Tab` | Switch between Search and Repos views |
 | `?` | Toggle help overlay |
-| `q` | Quit (when search is empty) |
+| `Ctrl+Q` | Quit application |
 | `Ctrl+C` | Force quit |
-| `↑`/`k` | Move up |
-| `↓`/`j` | Move down |
+| `↑`/`Ctrl+K` | Move up |
+| `↓`/`Ctrl+J` | Move down |
 | `Enter` | Select / Open file |
 | `Esc` | Clear search / Go back |
+| `Ctrl+P` | Toggle preview panel |
+| `Ctrl+O` | Open file in editor |
 | `Ctrl+U` | Clear search input |
 | `d` | Delete repository (in Repos view) |
 | `r` | Refresh list (in Repos view) |
@@ -148,6 +150,16 @@ knowledge-index config                         # Show current config
 knowledge-index config max_file_size_mb 20     # Set a value
 knowledge-index config --reset                 # Reset to defaults
 ```
+
+### `mcp`
+
+Start the MCP (Model Context Protocol) server for AI assistant integration.
+
+```bash
+knowledge-index mcp
+```
+
+The MCP server allows AI tools like GitHub Copilot CLI, Claude Desktop, or other MCP-compatible clients to search and retrieve content from your indexed repositories. See [MCP Integration Guide](mcp-integration.md) for detailed setup instructions.
 
 ## Configuration
 

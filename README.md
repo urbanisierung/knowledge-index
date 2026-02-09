@@ -9,7 +9,7 @@ Modern developers and knowledge workers maintain dozens of repositories, documen
 **knowledge-index** solves this by:
 - **Indexing everything locally** — Code, markdown, configs across all your projects
 - **Enabling instant full-text search** — SQLite FTS5 provides sub-millisecond queries
-- **Providing AI-ready output** — JSON mode and MCP server integration (coming soon)
+- **Providing AI-ready output** — JSON mode and MCP server for AI assistant integration
 - **Working offline** — No cloud dependencies, your data stays local
 
 ## Prerequisites
@@ -68,6 +68,46 @@ knowledge-index search "TODO" --json
 
 Run `knowledge-index --help` for all available commands.
 
+## AI Integration (MCP)
+
+Start the MCP server to use knowledge-index with AI assistants:
+
+```bash
+knowledge-index mcp
+```
+
+### GitHub Copilot CLI
+
+Add to your MCP servers configuration:
+
+```json
+{
+  "mcpServers": {
+    "knowledge-index": {
+      "command": "knowledge-index",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add to `~/.config/claude/claude_desktop_config.json` (Linux/macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "knowledge-index": {
+      "command": "knowledge-index",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+See [MCP Integration Guide](doc/mcp-integration.md) for detailed setup and available tools.
+
 ## Development
 
 This project uses a Makefile for development workflows. Docker is used to run CI checks locally, ensuring consistency with GitHub Actions.
@@ -103,6 +143,7 @@ Run `make help` to see all available commands.
 
 - [Features](doc/features.md) — Feature overview
 - [Documentation](doc/documentation.md) — Detailed usage guide
+- [MCP Integration](doc/mcp-integration.md) — AI assistant setup guide
 - [Roadmap](doc/roadmap.md) — Implementation roadmap
 - [Progress](doc/progress.md) — Changelog
 

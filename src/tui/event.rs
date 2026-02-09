@@ -77,7 +77,10 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
     // Handle preview mode separately
     if app.show_preview {
         match code {
-            KeyCode::Char('p') | KeyCode::Esc => {
+            KeyCode::Char('p') if modifiers.contains(KeyModifiers::CONTROL) => {
+                app.toggle_preview();
+            }
+            KeyCode::Esc => {
                 app.toggle_preview();
             }
             KeyCode::Char('j') | KeyCode::Down => {
@@ -86,7 +89,7 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
             KeyCode::Char('k') | KeyCode::Up => {
                 app.preview_scroll_up();
             }
-            KeyCode::Char('q') => {
+            KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => {
                 app.should_quit = true;
             }
             KeyCode::Tab => {
@@ -100,7 +103,8 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
     }
 
     match code {
-        KeyCode::Char('q') if app.search_input.is_empty() => {
+        // Ctrl+Q to quit (works even when typing)
+        KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => {
             app.should_quit = true;
         }
         KeyCode::Esc => {
@@ -117,7 +121,8 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
             app.select_next();
             app.update_preview_if_visible();
         }
-        KeyCode::Char('j') if app.search_input.is_empty() => {
+        // Ctrl+J to move down (works even when typing)
+        KeyCode::Char('j') if modifiers.contains(KeyModifiers::CONTROL) => {
             app.select_next();
             app.update_preview_if_visible();
         }
@@ -125,11 +130,13 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
             app.select_prev();
             app.update_preview_if_visible();
         }
-        KeyCode::Char('k') if app.search_input.is_empty() => {
+        // Ctrl+K to move up (works even when typing)
+        KeyCode::Char('k') if modifiers.contains(KeyModifiers::CONTROL) => {
             app.select_prev();
             app.update_preview_if_visible();
         }
-        KeyCode::Char('p') if app.search_input.is_empty() => {
+        // Ctrl+P to toggle preview (works even when typing)
+        KeyCode::Char('p') if modifiers.contains(KeyModifiers::CONTROL) => {
             app.toggle_preview();
         }
         KeyCode::Enter if !app.search_input.is_empty() => {

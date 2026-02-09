@@ -297,7 +297,7 @@ pub async fn run_mcp_server(db: Database, config: Config) -> crate::error::Resul
     let server = KnowledgeIndexMcp::new(db, config);
 
     // Log to stderr only (stdout is for MCP protocol)
-    eprintln!("Starting knowledge-index MCP server...");
+    print_mcp_startup_info();
 
     let service = server
         .serve(rmcp::transport::io::stdio())
@@ -310,4 +310,38 @@ pub async fn run_mcp_server(db: Database, config: Config) -> crate::error::Resul
         .map_err(|e| crate::error::AppError::Other(format!("MCP server error: {e}")))?;
 
     Ok(())
+}
+
+/// Print startup information and integration guide to stderr.
+fn print_mcp_startup_info() {
+    eprintln!("\x1b[1;36m╭─────────────────────────────────────────────────────────────╮\x1b[0m");
+    eprintln!("\x1b[1;36m│\x1b[0m  \x1b[1mknowledge-index MCP Server\x1b[0m                                \x1b[1;36m│\x1b[0m");
+    eprintln!("\x1b[1;36m╰─────────────────────────────────────────────────────────────╯\x1b[0m");
+    eprintln!();
+    eprintln!("\x1b[1mAvailable Tools:\x1b[0m");
+    eprintln!("  \x1b[32m•\x1b[0m search       - Search indexed content (lexical/semantic/hybrid)");
+    eprintln!("  \x1b[32m•\x1b[0m list_repos   - List all indexed repositories");
+    eprintln!("  \x1b[32m•\x1b[0m get_file     - Read full file content");
+    eprintln!("  \x1b[32m•\x1b[0m get_context  - Get lines around a specific line number");
+    eprintln!();
+    eprintln!("\x1b[1mIntegration:\x1b[0m");
+    eprintln!();
+    eprintln!("  \x1b[33mGitHub Copilot CLI\x1b[0m (~/.config/github-copilot/mcp.json):");
+    eprintln!("  \x1b[90m┌──────────────────────────────────────────────────────────┐\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m {{                                                         \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m   \"mcpServers\": {{                                         \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m     \"knowledge-index\": {{                                  \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m       \"command\": \"knowledge-index\",                       \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m       \"args\": [\"mcp\"]                                     \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m     }}                                                      \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m   }}                                                        \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m│\x1b[0m }}                                                          \x1b[90m│\x1b[0m");
+    eprintln!("  \x1b[90m└──────────────────────────────────────────────────────────┘\x1b[0m");
+    eprintln!();
+    eprintln!("  \x1b[33mClaude Desktop\x1b[0m (~/.config/claude/claude_desktop_config.json):");
+    eprintln!("  \x1b[90m  Same configuration as above\x1b[0m");
+    eprintln!();
+    eprintln!("\x1b[1mStatus:\x1b[0m \x1b[32mListening on stdio...\x1b[0m");
+    eprintln!("\x1b[90mPress Ctrl+C to stop\x1b[0m");
+    eprintln!();
 }
