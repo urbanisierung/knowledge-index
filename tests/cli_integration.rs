@@ -46,7 +46,7 @@ fn create_test_repo() -> tempfile::TempDir {
     // Create a markdown file with frontmatter
     fs::write(
         tmp.path().join("notes.md"),
-        r#"---
+        r"---
 title: My Notes
 tags: [test, notes]
 ---
@@ -58,7 +58,7 @@ Some [[wiki-link]] content here.
 ## Section 1
 
 More content.
-"#,
+",
     )
     .unwrap();
 
@@ -129,7 +129,7 @@ fn test_cli_search_no_results() {
 }
 
 #[test]
-#[ignore] // Requires full index cycle, run with --ignored
+#[ignore = "Requires full index cycle, run with --ignored"]
 fn test_full_index_search_cycle() {
     let test_dir = create_test_repo();
     let test_path = test_dir.path().to_string_lossy().to_string();

@@ -55,9 +55,6 @@ jobs:
       
       - name: Run tests
         run: cargo test --all-features
-      
-      - name: Run doc tests
-        run: cargo test --doc
 
   msrv:
     name: Minimum Supported Rust Version

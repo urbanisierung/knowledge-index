@@ -616,13 +616,13 @@ mod tests {
 
     #[test]
     fn test_parse_frontmatter() {
-        let content = r#"---
+        let content = r"---
 title: My Note
 tags: [rust, programming]
 ---
 
 # Content here
-"#;
+";
         let meta = parse_markdown(content);
         assert_eq!(meta.title, Some("My Note".to_string()));
         assert_eq!(meta.tags, vec!["rust", "programming"]);
@@ -630,7 +630,7 @@ tags: [rust, programming]
 
     #[test]
     fn test_extract_headings() {
-        let content = r#"# Main Title
+        let content = r"# Main Title
 
 ## Section 1
 
@@ -639,7 +639,7 @@ Some content
 ### Subsection
 
 ## Section 2
-"#;
+";
         let meta = parse_markdown(content);
         assert_eq!(meta.headings.len(), 4);
         assert_eq!(meta.headings[0].level, 1);
