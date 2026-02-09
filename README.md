@@ -14,7 +14,8 @@ Modern developers and knowledge workers maintain dozens of repositories, documen
 
 ## Prerequisites
 
-- Rust 1.75+ (install via [rustup](https://rustup.rs/))
+- Rust 1.88+ (install via [rustup](https://rustup.rs/))
+- Docker (optional, for running CI checks locally)
 
 ## Quickstart
 
@@ -66,6 +67,37 @@ knowledge-index search "TODO" --json
 ```
 
 Run `knowledge-index --help` for all available commands.
+
+## Development
+
+This project uses a Makefile for development workflows. Docker is used to run CI checks locally, ensuring consistency with GitHub Actions.
+
+```bash
+# Run full CI pipeline (recommended before pushing)
+make ci
+
+# Run quick checks (format + clippy only)
+make ci-quick
+
+# Check minimum supported Rust version
+make ci-msrv
+
+# Individual CI steps
+make ci-format      # Check formatting
+make ci-clippy      # Run clippy lints
+make ci-test        # Run tests
+make ci-doc         # Build documentation
+
+# Local development (uses local Rust toolchain)
+make build          # Build debug
+make release        # Build release
+make test           # Run tests
+make fmt            # Format code
+make lint           # Run clippy
+make clean          # Clean artifacts
+```
+
+Run `make help` to see all available commands.
 
 ## Documentation
 

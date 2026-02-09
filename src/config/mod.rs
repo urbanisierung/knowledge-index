@@ -64,6 +64,11 @@ impl Default for Config {
 impl Config {
     /// Get the configuration directory path for the current OS
     pub fn config_dir() -> Result<PathBuf> {
+        // Allow override via environment variable (useful for testing)
+        if let Ok(dir) = std::env::var("KNOWLEDGE_INDEX_CONFIG_DIR") {
+            return Ok(PathBuf::from(dir));
+        }
+
         dirs::config_dir()
             .map(|p| p.join(APP_NAME))
             .ok_or_else(|| AppError::Config("Could not determine config directory".into()))
@@ -137,8 +142,10 @@ mod tests {
         let config = Config::default();
         assert_eq!(config.max_file_size_bytes(), 10 * 1024 * 1024);
 
-        let mut config = Config::default();
-        config.max_file_size_mb = 5;
+        let config = Config {
+            max_file_size_mb: 5,
+            ..Default::default()
+        };
         assert_eq!(config.max_file_size_bytes(), 5 * 1024 * 1024);
     }
 
@@ -158,9 +165,9 @@ mod tests {
     #[test]
     fn test_config_partial_parsing() {
         // Config should use defaults for missing fields
-        let partial_toml = r#"
+        let partial_toml = r"
             max_file_size_mb = 20
-        "#;
+        ";
         let config: Config = toml::from_str(partial_toml).unwrap();
         assert_eq!(config.max_file_size_mb, 20);
         assert_eq!(config.batch_size, 100); // default

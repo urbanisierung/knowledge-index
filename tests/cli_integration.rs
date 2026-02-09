@@ -10,7 +10,21 @@ fn binary_path() -> PathBuf {
     path.pop(); // Remove test binary name
     path.pop(); // Remove 'deps'
     path.push("knowledge-index");
+
+    // On Windows, add .exe extension
+    #[cfg(windows)]
+    {
+        path.set_extension("exe");
+    }
+
     path
+}
+
+/// Create a Command with an isolated config directory for testing
+fn test_command(config_dir: &std::path::Path) -> Command {
+    let mut cmd = Command::new(binary_path());
+    cmd.env("KNOWLEDGE_INDEX_CONFIG_DIR", config_dir);
+    cmd
 }
 
 /// Create a temporary test directory with sample files
@@ -46,7 +60,7 @@ fn create_test_repo() -> tempfile::TempDir {
     // Create a markdown file with frontmatter
     fs::write(
         tmp.path().join("notes.md"),
-        r#"---
+        r"---
 title: My Notes
 tags: [test, notes]
 ---
@@ -58,7 +72,7 @@ Some [[wiki-link]] content here.
 ## Section 1
 
 More content.
-"#,
+",
     )
     .unwrap();
 
@@ -93,7 +107,8 @@ fn test_cli_version() {
 
 #[test]
 fn test_cli_config_show() {
-    let output = Command::new(binary_path())
+    let config_dir = tempfile::tempdir().unwrap();
+    let output = test_command(config_dir.path())
         .arg("config")
         .output()
         .expect("Failed to run binary");
@@ -104,38 +119,49 @@ fn test_cli_config_show() {
 
 #[test]
 fn test_cli_list_empty() {
-    let output = Command::new(binary_path())
+    let config_dir = tempfile::tempdir().unwrap();
+    let output = test_command(config_dir.path())
         .arg("list")
         .arg("--json")
         .output()
         .expect("Failed to run binary");
 
-    assert!(output.status.success());
+    assert!(
+        output.status.success(),
+        "list --json failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("repositories") || stdout.contains("[]"));
 }
 
 #[test]
 fn test_cli_search_no_results() {
-    let output = Command::new(binary_path())
+    let config_dir = tempfile::tempdir().unwrap();
+    let output = test_command(config_dir.path())
         .args(["search", "nonexistent_term_12345", "--json"])
         .output()
         .expect("Failed to run binary");
 
-    assert!(output.status.success());
+    assert!(
+        output.status.success(),
+        "search --json failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Should return empty results
     assert!(stdout.contains("results") || stdout.contains("[]"));
 }
 
 #[test]
-#[ignore] // Requires full index cycle, run with --ignored
+#[ignore = "Requires full index cycle, run with --ignored"]
 fn test_full_index_search_cycle() {
+    let config_dir = tempfile::tempdir().unwrap();
     let test_dir = create_test_repo();
     let test_path = test_dir.path().to_string_lossy().to_string();
 
     // Index the test directory
-    let output = Command::new(binary_path())
+    let output = test_command(config_dir.path())
         .args(["index", &test_path, "--quiet"])
         .output()
         .expect("Failed to run index");
@@ -147,7 +173,7 @@ fn test_full_index_search_cycle() {
     );
 
     // Search for known content
-    let output = Command::new(binary_path())
+    let output = test_command(config_dir.path())
         .args(["search", "greet", "--json"])
         .output()
         .expect("Failed to run search");
@@ -157,7 +183,7 @@ fn test_full_index_search_cycle() {
     assert!(stdout.contains("lib.rs") || stdout.contains("greet"));
 
     // Search for markdown content
-    let output = Command::new(binary_path())
+    let output = test_command(config_dir.path())
         .args(["search", "wiki-link", "--json"])
         .output()
         .expect("Failed to run search");
@@ -165,7 +191,7 @@ fn test_full_index_search_cycle() {
     assert!(output.status.success());
 
     // Clean up - remove the indexed repo
-    let output = Command::new(binary_path())
+    let output = test_command(config_dir.path())
         .args(["remove", &test_path, "--force"])
         .output()
         .expect("Failed to run remove");

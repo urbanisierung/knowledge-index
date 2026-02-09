@@ -21,6 +21,31 @@
 
 If there are warnings, fix them before considering the task complete.
 
+### CI Verification for Larger Features
+
+**Before finishing a bigger feature or significant change:**
+
+1. **First, run local checks (fast):**
+   ```bash
+   cargo fmt --all
+   cargo clippy -- -D warnings
+   cargo build --release
+   cargo test --all-features
+   ```
+
+2. **Then, run full CI verification (Docker-based, matches GitHub Actions):**
+   ```bash
+   make ci
+   ```
+   Or for quicker validation: `make ci-quick` (format + clippy only)
+
+This ensures the CI pipeline will pass. The Docker-based checks use the same Rust version and environment as GitHub Actions, catching issues that local toolchains might miss.
+
+**Available CI commands:**
+- `make ci` — Full CI pipeline (format, clippy, build, test, doc)
+- `make ci-quick` — Quick checks (format + clippy)
+- `make ci-msrv` — Check minimum supported Rust version (1.88)
+
 ## Project Structure
 
 Follow standard Rust CLI project layout:

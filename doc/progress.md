@@ -2,6 +2,36 @@
 
 ## Changelog
 
+### 2026-02-09
+
+- **Fixed CI Test Isolation Issues**
+  - Added `KNOWLEDGE_INDEX_CONFIG_DIR` environment variable support for custom config directory
+  - Updated all integration tests to use isolated temporary directories
+  - Prevents test interference and CI environment differences from causing failures
+  - Each test now runs with its own fresh database/config
+
+- **Added Local CI Scripts (Makefile)**
+  - Created `Makefile` with Docker-based CI commands
+  - `make ci` runs full CI pipeline matching GitHub Actions
+  - `make ci-quick` runs format and clippy checks only
+  - `make ci-msrv` checks minimum supported Rust version (1.88)
+  - Individual steps: `make ci-format`, `make ci-clippy`, `make ci-test`, `make ci-doc`
+  - `make ci-test-verbose` for debugging test failures with output
+  - Local development commands: `make build`, `make release`, `make test`, `make fmt`, `make lint`
+  - Updated README.md with development section
+  - Updated copilot-instructions.md with CI verification requirements
+
+- **Fixed Integration Test Issues**
+  - Improved test error messages to include stderr output for debugging
+  - Added Windows `.exe` extension handling in binary path detection
+  - Tests now show actual error message when commands fail
+
+- **Fixed Additional CI Issues**
+  - Updated MSRV to 1.88 (required by darling, ort-sys dependencies)
+  - Fixed clippy warnings: `field_reassign_with_default`, `needless_raw_string_hashes`
+  - Fixed `#[ignore]` without reason in integration tests
+  - Removed `cargo test --doc` step (binary-only crate, no lib.rs)
+
 ### 2026-02-08
 
 - **Fixed CI Pipeline Issues**
