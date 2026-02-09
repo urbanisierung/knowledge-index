@@ -4,6 +4,21 @@
 
 ### 2026-02-09
 
+- **Fixed TUI Keyboard Shortcuts**
+  - Changed shortcuts to use Ctrl combinations to avoid conflicts with search input
+  - `Ctrl+Q` - Quit (works while typing)
+  - `Ctrl+P` - Toggle preview (works while typing)
+  - `Ctrl+J/K` - Navigate up/down (works while typing)
+  - `Ctrl+O` - Open file in editor
+  - Arrow keys still work for navigation
+  - Updated help overlay with new shortcuts
+
+- **Improved MCP/Copilot Documentation**
+  - Added GitHub Copilot CLI configuration example with file paths
+  - Updated README.md with AI Integration section
+  - Added `mcp` command to documentation.md
+  - Removed "(coming soon)" from MCP description
+
 - **Fixed CI Test Isolation Issues**
   - Added `KNOWLEDGE_INDEX_CONFIG_DIR` environment variable support for custom config directory
   - Updated all integration tests to use isolated temporary directories

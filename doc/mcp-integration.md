@@ -128,7 +128,23 @@ Add to your `claude_desktop_config.json` (typically at `~/.config/claude/claude_
 
 ### GitHub Copilot CLI
 
-The MCP server can be used with any tool that supports the MCP protocol over stdio.
+GitHub Copilot CLI supports MCP servers for enhanced context. Add knowledge-index to your MCP configuration:
+
+**Linux/macOS:** `~/.config/github-copilot/mcp.json`
+**Windows:** `%APPDATA%\GitHub Copilot\mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "knowledge-index": {
+      "command": "knowledge-index",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+After configuration, Copilot CLI can search your indexed repositories, retrieve file contents, and get code context automatically.
 
 ### Shell Aliases
 
