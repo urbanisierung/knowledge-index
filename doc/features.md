@@ -2,7 +2,18 @@
 
 ## Overview
 
-This document tracks all features of the kdex CLI application.
+kdex indexes your code, docs, notes, and wikis locally, making everything searchable for you and your AI assistants.
+
+## Highlights
+
+| What | Why It Matters |
+|------|----------------|
+| **🔍 Instant Search** | SQLite FTS5 gives sub-millisecond queries across all your knowledge |
+| **🤖 AI-Ready** | MCP server lets GitHub Copilot, Claude, and Ollama search your files |
+| **📁 Universal** | Works with code repos, Obsidian vaults, wikis, any markdown |
+| **🔒 Local-First** | Your data never leaves your machine. Works offline. |
+| **⚡ Fast** | Index 100k files in seconds, search in milliseconds |
+| **🖥️ Interactive TUI** | Full-screen interface with preview panel |
 
 ## Feature List
 

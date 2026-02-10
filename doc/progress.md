@@ -4,6 +4,12 @@
 
 ### 2026-02-10
 
+- **Completed Phase 12: Marketing & Growth**
+  - Rewrote README with engaging hero section, feature tables, problem/solution format
+  - Created `doc/ollama-integration.md` for local LLM workflows
+  - Created `docs/index.html` - single-file landing page (9.5KB, dark mode, mobile-responsive)
+  - Added all messaging pillars: local-first, AI-ready, instant setup, universal
+
 - **Added Phase 12: Marketing & Growth to Roadmap**
   - README excellence with best practices from popular CLIs
   - Marketing message and positioning strategy

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kdex — All your knowledge. One search. AI-ready.</title>
+  <meta name="description" content="Index your code, docs, notes, and wikis locally. Let AI assistants search everything you know.">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-alt: #161b22;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-alt: #1f6feb;
+      --green: #3fb950;
+      --border: #30363d;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --bg-alt: #f6f8fa;
+        --text: #1f2328;
+        --text-muted: #656d76;
+        --accent: #0969da;
+        --accent-alt: #0550ae;
+        --green: #1a7f37;
+        --border: #d0d7de;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: var(--mono);
+      background: var(--bg-alt);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    pre {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1em;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.9em;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 4rem 0 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .hero .tagline {
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .hero .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto 2rem;
+    }
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      font-family: var(--mono);
+      font-size: 1rem;
+    }
+    .install-box .prompt { color: var(--green); }
+    .install-box .cmd { color: var(--text); }
+    .cta-row {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { text-decoration: none; opacity: 0.9; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { border: 1px solid var(--border); color: var(--text); }
+
+    /* Section */
+    section { padding: 3rem 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+    section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    section h2 .icon { font-size: 1.2rem; }
+
+    /* Problem/Solution */
+    .problem-solution { display: grid; gap: 2rem; }
+    @media (min-width: 600px) {
+      .problem-solution { grid-template-columns: 1fr 1fr; }
+    }
+    .problem, .solution {
+      background: var(--bg-alt);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .problem h3, .solution h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .problem ul, .solution ul { padding-left: 1.25rem; color: var(--text-muted); }
+    .problem ul li, .solution ul li { margin-bottom: 0.3rem; }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 500px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .feature {
+      background: var(--bg-alt);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .feature h3 {
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .feature p { font-size: 0.9rem; color: var(--text-muted); }
+
+    /* Integrations */
+    .integrations {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .integration {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .integration .logo {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Quickstart */
+    .quickstart pre { margin-bottom: 1rem; }
+    .quickstart .step {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .quickstart .step-num {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <header class="hero">
+      <h1>kdex</h1>
+      <p class="tagline">All your knowledge. One search. AI-ready.</p>
+      <p class="subtitle">
+        Index your code, docs, notes, and wikis locally.<br>
+        Let AI assistants search everything you know.
+      </p>
+      <div class="install-box">
+        <span class="prompt">$</span>
+        <span class="cmd">cargo install kdex</span>
+      </div>
+      <div class="cta-row">
+        <a href="https://github.com/urbanisierung/kdex" class="btn btn-primary">View on GitHub</a>
+        <a href="https://github.com/urbanisierung/kdex/blob/main/doc/documentation.md" class="btn btn-secondary">Documentation</a>
+      </div>
+    </header>
+
+    <!-- Problem / Solution -->
+    <section>
+      <div class="problem-solution">
+        <div class="problem">
+          <h3>😩 The Problem</h3>
+          <ul>
+            <li>Code scattered across dozens of repos</li>
+            <li>Notes buried in Obsidian vaults</li>
+            <li>Docs lost in markdown wikis</li>
+            <li>AI assistants can't see YOUR files</li>
+          </ul>
+        </div>
+        <div class="solution">
+          <h3>✨ The Solution</h3>
+          <ul>
+            <li>Index everything with one command</li>
+            <li>Search instantly across all sources</li>
+            <li>AI tools query your knowledge directly</li>
+            <li>100% local — data never leaves your machine</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section>
+      <h2><span class="icon">⚡</span> Features</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <h3>🔍 Instant Search</h3>
+          <p>SQLite FTS5 gives sub-millisecond full-text search across all your indexed content.</p>
+        </div>
+        <div class="feature">
+          <h3>🤖 AI-Ready</h3>
+          <p>MCP server for GitHub Copilot, Claude Desktop, and Ollama integration.</p>
+        </div>
+        <div class="feature">
+          <h3>📁 Universal</h3>
+          <p>Code repos, Obsidian vaults, markdown wikis, any text-based knowledge.</p>
+        </div>
+        <div class="feature">
+          <h3>🔒 Local-First</h3>
+          <p>Your data stays on your machine. Works offline. No cloud dependencies.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Integrations -->
+    <section>
+      <h2><span class="icon">🔌</span> AI Integrations</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">Works with your favorite AI tools via MCP:</p>
+      <div class="integrations">
+        <div class="integration">
+          <div class="logo">🐙</div>
+          <div>GitHub Copilot</div>
+        </div>
+        <div class="integration">
+          <div class="logo">🤖</div>
+          <div>Claude Desktop</div>
+        </div>
+        <div class="integration">
+          <div class="logo">🦙</div>
+          <div>Ollama</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart -->
+    <section class="quickstart">
+      <h2><span class="icon">🚀</span> Quickstart</h2>
+      <div class="step"><span class="step-num">1.</span> Install kdex</div>
+      <pre>cargo install kdex</pre>
+      <div class="step"><span class="step-num">2.</span> Index your knowledge</div>
+      <pre>kdex index ~/code/my-project
+kdex index ~/Documents/obsidian-vault</pre>
+      <div class="step"><span class="step-num">3.</span> Search everything</div>
+      <pre>kdex search "authentication"</pre>
+      <div class="step"><span class="step-num">4.</span> Enable AI access</div>
+      <pre>kdex mcp  # Start MCP server for AI assistants</pre>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>
+        <a href="https://github.com/urbanisierung/kdex">GitHub</a> ·
+        <a href="https://github.com/urbanisierung/kdex/blob/main/doc/documentation.md">Docs</a> ·
+        <a href="https://github.com/urbanisierung/kdex/blob/main/LICENSE">MIT License</a>
+      </p>
+      <p style="margin-top: 0.5rem;">Built with 🦀 Rust</p>
+    </footer>
+  </div>
+</body>
+</html>
