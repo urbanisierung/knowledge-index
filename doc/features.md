@@ -61,8 +61,14 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **Release Automation** | Cross-platform binary builds and GitHub releases | 2026-02-08 |
 | **Unit Tests** | 18 unit tests covering config, search, and markdown | 2026-02-08 |
 | **Integration Tests** | CLI command tests for help, version, config, search | 2026-02-08 |
+| **Remote GitHub Repos** | Clone and index remote GitHub repositories | 2026-02-09 |
+| **Background Sync** | Auto-sync remote repos to stay up-to-date | 2026-02-09 |
+| **SSH/Token Auth** | Support SSH agent and GitHub tokens for private repos | 2026-02-09 |
+| **Config Export** | Export configuration to YAML for backup/migration | 2026-02-09 |
+| **Config Import** | Import configuration with merge support | 2026-02-09 |
+| **Shallow Clone** | Optional shallow clone for faster setup | 2026-02-09 |
+| **Remote Cleanup** | Auto-delete cloned repos when removed from index | 2026-02-09 |
 
 ## Planned Features
 
 - Background file watching (TUI integration)
-- Remote sync capabilities

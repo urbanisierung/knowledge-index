@@ -2,7 +2,7 @@ use chrono::Utc;
 use owo_colors::OwoColorize;
 
 use crate::cli::args::Args;
-use crate::db::{Database, RepoStatus};
+use crate::db::{Database, RepoStatus, SourceType};
 use crate::error::Result;
 
 use super::use_colors;
@@ -23,8 +23,10 @@ pub fn run(args: &Args) -> Result<()> {
             println!("Get started by indexing a project:");
             if colors {
                 println!("  {}", "kdex index /path/to/project".cyan());
+                println!("  {}", "kdex add --remote owner/repo".cyan());
             } else {
                 println!("  kdex index /path/to/project");
+                println!("  kdex add --remote owner/repo");
             }
         }
         return Ok(());
@@ -40,7 +42,11 @@ pub fn run(args: &Args) -> Result<()> {
                     "file_count": r.file_count,
                     "total_size_bytes": r.total_size_bytes,
                     "status": r.status.as_str(),
+                    "source_type": r.source_type.as_str(),
+                    "remote_url": r.remote_url,
+                    "remote_branch": r.remote_branch,
                     "last_indexed_at": r.last_indexed_at.map(|dt| dt.to_rfc3339()),
+                    "last_synced_at": r.last_synced_at.map(|dt| dt.to_rfc3339()),
                     "created_at": r.created_at.to_rfc3339(),
                 })
             })
@@ -67,11 +73,18 @@ pub fn run(args: &Args) -> Result<()> {
                         "○".to_string()
                     }
                 }
-                RepoStatus::Indexing => {
+                RepoStatus::Indexing | RepoStatus::Syncing => {
                     if colors {
                         "◐".cyan().to_string()
                     } else {
                         "◐".to_string()
+                    }
+                }
+                RepoStatus::Cloning => {
+                    if colors {
+                        "↓".cyan().to_string()
+                    } else {
+                        "↓".to_string()
                     }
                 }
                 RepoStatus::Error => {
@@ -81,6 +94,18 @@ pub fn run(args: &Args) -> Result<()> {
                         "!".to_string()
                     }
                 }
+            };
+
+            // Source type indicator
+            let source_indicator = match repo.source_type {
+                SourceType::Remote => {
+                    if colors {
+                        "☁".dimmed().to_string()
+                    } else {
+                        "☁".to_string()
+                    }
+                }
+                SourceType::Local => " ".to_string(),
             };
 
             // Format time ago
@@ -95,8 +120,9 @@ pub fn run(args: &Args) -> Result<()> {
 
             if colors {
                 println!(
-                    "{} {:<20} │ {:>6} files │ {:>8} │ {}",
+                    "{}{} {:<20} │ {:>6} files │ {:>8} │ {}",
                     status_icon,
+                    source_indicator,
                     repo.name.blue(),
                     repo.file_count,
                     size_str,
@@ -104,15 +130,22 @@ pub fn run(args: &Args) -> Result<()> {
                 );
             } else {
                 println!(
-                    "{} {:<20} │ {:>6} files │ {:>8} │ {}",
-                    status_icon, repo.name, repo.file_count, size_str, time_ago
+                    "{}{} {:<20} │ {:>6} files │ {:>8} │ {}",
+                    status_icon, source_indicator, repo.name, repo.file_count, size_str, time_ago
                 );
             }
         }
 
         println!();
+        let remote_count = repos
+            .iter()
+            .filter(|r| r.source_type == SourceType::Remote)
+            .count();
+        let local_count = repos.len() - remote_count;
         println!(
-            "Status: {} ready  {} pending  {} indexing  {} error",
+            "{} local, {} remote │ Status: {} ready  {} pending  {} syncing  {} error",
+            local_count,
+            remote_count,
             if colors {
                 "●".green().to_string()
             } else {

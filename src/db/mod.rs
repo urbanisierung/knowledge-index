@@ -15,6 +15,8 @@ pub enum RepoStatus {
     Indexing,
     Ready,
     Error,
+    Cloning,
+    Syncing,
 }
 
 impl RepoStatus {
@@ -25,6 +27,8 @@ impl RepoStatus {
             Self::Indexing => "indexing",
             Self::Ready => "ready",
             Self::Error => "error",
+            Self::Cloning => "cloning",
+            Self::Syncing => "syncing",
         }
     }
 
@@ -34,7 +38,34 @@ impl RepoStatus {
             "indexing" => Self::Indexing,
             "ready" => Self::Ready,
             "error" => Self::Error,
+            "cloning" => Self::Cloning,
+            "syncing" => Self::Syncing,
             _ => Self::Pending,
+        }
+    }
+}
+
+/// Repository source type
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SourceType {
+    Local,
+    Remote,
+}
+
+impl SourceType {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Local => "local",
+            Self::Remote => "remote",
+        }
+    }
+
+    #[must_use]
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "remote" => Self::Remote,
+            _ => Self::Local,
         }
     }
 }
@@ -126,6 +157,19 @@ pub struct Repository {
     pub file_count: i64,
     pub total_size_bytes: i64,
     pub status: RepoStatus,
+    pub source_type: SourceType,
+    pub remote_url: Option<String>,
+    pub remote_branch: Option<String>,
+    pub last_synced_at: Option<DateTime<Utc>>,
+}
+
+impl Repository {
+    /// Check if this is a remote repository
+    #[must_use]
+    #[allow(dead_code)]
+    pub fn is_remote(&self) -> bool {
+        self.source_type == SourceType::Remote
+    }
 }
 
 /// File record
@@ -237,6 +281,57 @@ impl Database {
             file_count: 0,
             total_size_bytes: 0,
             status: RepoStatus::Pending,
+            source_type: SourceType::Local,
+            remote_url: None,
+            remote_branch: None,
+            last_synced_at: None,
+        })
+    }
+
+    /// Add a remote repository
+    pub fn add_remote_repository(
+        &self,
+        path: &Path,
+        name: &str,
+        remote_url: &str,
+        branch: Option<&str>,
+    ) -> Result<Repository> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let now = Utc::now();
+
+        conn.execute(
+            "INSERT INTO repositories (path, name, created_at, status, source_type, remote_url, remote_branch)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                path.to_string_lossy(),
+                name,
+                now.to_rfc3339(),
+                RepoStatus::Cloning.as_str(),
+                SourceType::Remote.as_str(),
+                remote_url,
+                branch,
+            ],
+        )?;
+
+        let id = conn.last_insert_rowid();
+
+        Ok(Repository {
+            id,
+            path: path.to_path_buf(),
+            name: name.to_string(),
+            created_at: now,
+            last_indexed_at: None,
+            file_count: 0,
+            total_size_bytes: 0,
+            status: RepoStatus::Cloning,
+            source_type: SourceType::Remote,
+            remote_url: Some(remote_url.to_string()),
+            remote_branch: branch.map(String::from),
+            last_synced_at: None,
         })
     }
 
@@ -249,7 +344,8 @@ impl Database {
         let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
 
         let mut stmt = conn.prepare(
-            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status
+            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
+                    source_type, remote_url, remote_branch, last_synced_at
              FROM repositories WHERE path = ?1"
         )?;
 
@@ -267,6 +363,15 @@ impl Database {
                 file_count: row.get(5)?,
                 total_size_bytes: row.get(6)?,
                 status: RepoStatus::from_str(&row.get::<_, String>(7)?),
+                source_type: SourceType::from_str(
+                    &row.get::<_, Option<String>>(8)?.unwrap_or_default(),
+                ),
+                remote_url: row.get(9)?,
+                remote_branch: row.get(10)?,
+                last_synced_at: row
+                    .get::<_, Option<String>>(11)?
+                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                    .map(|dt| dt.with_timezone(&Utc)),
             })
         });
 
@@ -285,7 +390,8 @@ impl Database {
             .map_err(|e| AppError::Other(e.to_string()))?;
 
         let mut stmt = conn.prepare(
-            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status
+            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
+                    source_type, remote_url, remote_branch, last_synced_at
              FROM repositories ORDER BY name"
         )?;
 
@@ -304,12 +410,126 @@ impl Database {
                     file_count: row.get(5)?,
                     total_size_bytes: row.get(6)?,
                     status: RepoStatus::from_str(&row.get::<_, String>(7)?),
+                    source_type: SourceType::from_str(
+                        &row.get::<_, Option<String>>(8)?.unwrap_or_default(),
+                    ),
+                    remote_url: row.get(9)?,
+                    remote_branch: row.get(10)?,
+                    last_synced_at: row
+                        .get::<_, Option<String>>(11)?
+                        .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                        .map(|dt| dt.with_timezone(&Utc)),
                 })
             })?
             .filter_map(std::result::Result::ok)
             .collect();
 
         Ok(repos)
+    }
+
+    /// Get remote repositories that need syncing
+    pub fn get_remote_repositories(&self) -> Result<Vec<Repository>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn.prepare(
+            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
+                    source_type, remote_url, remote_branch, last_synced_at
+             FROM repositories WHERE source_type = 'remote' ORDER BY name"
+        )?;
+
+        let repos = stmt
+            .query_map([], |row| {
+                Ok(Repository {
+                    id: row.get(0)?,
+                    path: PathBuf::from(row.get::<_, String>(1)?),
+                    name: row.get(2)?,
+                    created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(3)?)
+                        .map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc)),
+                    last_indexed_at: row
+                        .get::<_, Option<String>>(4)?
+                        .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                        .map(|dt| dt.with_timezone(&Utc)),
+                    file_count: row.get(5)?,
+                    total_size_bytes: row.get(6)?,
+                    status: RepoStatus::from_str(&row.get::<_, String>(7)?),
+                    source_type: SourceType::Remote,
+                    remote_url: row.get(9)?,
+                    remote_branch: row.get(10)?,
+                    last_synced_at: row
+                        .get::<_, Option<String>>(11)?
+                        .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                        .map(|dt| dt.with_timezone(&Utc)),
+                })
+            })?
+            .filter_map(std::result::Result::ok)
+            .collect();
+
+        Ok(repos)
+    }
+
+    /// Update last synced time for a repository
+    pub fn update_repository_synced(&self, repo_id: i64) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+        let now = Utc::now();
+
+        conn.execute(
+            "UPDATE repositories SET last_synced_at = ?1, status = ?2 WHERE id = ?3",
+            params![now.to_rfc3339(), RepoStatus::Ready.as_str(), repo_id],
+        )?;
+        Ok(())
+    }
+
+    /// Get repository by ID
+    #[allow(dead_code)]
+    pub fn get_repository_by_id(&self, repo_id: i64) -> Result<Option<Repository>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn.prepare(
+            "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
+                    source_type, remote_url, remote_branch, last_synced_at
+             FROM repositories WHERE id = ?1"
+        )?;
+
+        let result = stmt.query_row(params![repo_id], |row| {
+            Ok(Repository {
+                id: row.get(0)?,
+                path: PathBuf::from(row.get::<_, String>(1)?),
+                name: row.get(2)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(3)?)
+                    .map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc)),
+                last_indexed_at: row
+                    .get::<_, Option<String>>(4)?
+                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                    .map(|dt| dt.with_timezone(&Utc)),
+                file_count: row.get(5)?,
+                total_size_bytes: row.get(6)?,
+                status: RepoStatus::from_str(&row.get::<_, String>(7)?),
+                source_type: SourceType::from_str(
+                    &row.get::<_, Option<String>>(8)?.unwrap_or_default(),
+                ),
+                remote_url: row.get(9)?,
+                remote_branch: row.get(10)?,
+                last_synced_at: row
+                    .get::<_, Option<String>>(11)?
+                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                    .map(|dt| dt.with_timezone(&Utc)),
+            })
+        });
+
+        match result {
+            Ok(repo) => Ok(Some(repo)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// Update repository status

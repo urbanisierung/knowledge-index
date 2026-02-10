@@ -54,6 +54,8 @@ kdex mcp  # Start MCP server for Copilot, Claude, Ollama
 | 📁 **Universal** | Code repos, Obsidian vaults, wikis, any markdown |
 | 🔒 **Local-First** | Your data stays on your machine. Always. |
 | ⚡ **Fast** | Index 100k files in seconds, search in milliseconds |
+| 🌐 **Remote Repos** | Add GitHub repos by URL—auto-cloned, auto-synced |
+| 📦 **Portable** | Export/import config for easy machine migration |
 | 🖥️ **Interactive TUI** | Full-screen interface with preview panel |
 
 ---
@@ -67,6 +69,9 @@ cargo install kdex
 # Index your project
 kdex index .
 
+# Add a GitHub repo
+kdex add --remote owner/repo
+
 # Search
 kdex search "authentication"
 
@@ -74,7 +79,7 @@ kdex search "authentication"
 kdex
 ```
 
-That's it. Three commands to searchable knowledge.
+That's it. Your knowledge, instantly searchable.
 
 ---
 

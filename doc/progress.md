@@ -4,6 +4,18 @@
 
 ### 2026-02-10
 
+- **Implemented Phase 13: Remote Repositories & Configuration Portability**
+  - Added `kdex add --remote owner/repo` command for cloning GitHub repos
+  - Added `kdex sync` command for syncing remote repositories
+  - Added `kdex config export` for exporting settings to YAML
+  - Added `kdex config import` for importing settings with merge support
+  - Remote repos cloned to `~/.config/kdex/repos/<owner>/<repo>/`
+  - Support for SSH agent and GitHub token authentication
+  - Shallow clone option for faster setup
+  - Auto-delete cloned directories on `kdex remove`
+  - Extended database schema (v3) for remote repo metadata
+  - Added git2, serde_yaml, url dependencies
+
 - **Added Phase 13: Remote Repositories & Configuration Portability**
   - Part 13.1: Remote GitHub repository support with auto-clone
   - Part 13.2: Background sync for keeping remote repos up-to-date

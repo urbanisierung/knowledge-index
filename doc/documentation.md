@@ -216,3 +216,108 @@ Combines lexical and semantic search using Reciprocal Rank Fusion (RRF). Provide
 ```bash
 kdex search "error handling patterns" --hybrid
 ```
+
+## Remote Repository Support
+
+kdex can clone and sync remote GitHub repositories, keeping them up-to-date automatically.
+
+### Adding Remote Repositories
+
+```bash
+# Add from GitHub (shorthand)
+kdex add --remote owner/repo
+
+# Add with full URL
+kdex add --remote https://github.com/owner/repo.git
+
+# Specify branch
+kdex add --remote owner/repo --branch develop
+
+# Use a custom name
+kdex add --remote owner/repo --name my-docs
+
+# Shallow clone (faster, less disk space)
+kdex add --remote owner/repo --shallow
+```
+
+Remote repositories are cloned to:
+- **Linux:** `~/.config/kdex/repos/<owner>/<repo>/`
+- **macOS:** `~/Library/Application Support/kdex/repos/<owner>/<repo>/`
+- **Windows:** `%APPDATA%\kdex\repos\<owner>\<repo>\`
+
+### Authentication
+
+For private repositories, kdex supports:
+
+1. **SSH Agent** (recommended): If you have an SSH agent running with your GitHub key
+2. **Environment Variable**: Set `KDEX_GITHUB_TOKEN` or `GITHUB_TOKEN` with a personal access token
+
+### Syncing Remote Repositories
+
+```bash
+# Sync all remote repositories
+kdex sync
+
+# Sync a specific repository
+kdex sync owner/repo
+```
+
+Background sync also runs automatically during search operations to keep content fresh.
+
+### Removing Remote Repositories
+
+When you remove a remote repository, the cloned directory is also deleted:
+
+```bash
+kdex remove owner/repo
+```
+
+## Configuration Import/Export
+
+Easily migrate your kdex setup between machines.
+
+### Export Configuration
+
+```bash
+# Export to stdout (YAML)
+kdex config export
+
+# Export to a file
+kdex config export -o kdex-backup.yaml
+
+# Export only remote repositories (portable)
+kdex config export --remotes-only
+
+# Include local repos (paths may not work on other machines)
+kdex config export --include-local
+```
+
+### Import Configuration
+
+```bash
+# Import from file
+kdex config import kdex-backup.yaml
+
+# Merge with existing config (don't overwrite)
+kdex config import kdex-backup.yaml --merge
+
+# Import from stdin
+cat kdex-backup.yaml | kdex config import -
+
+# Skip confirmation prompts
+kdex config import kdex-backup.yaml --yes
+```
+
+### Portable Config Format
+
+```yaml
+version: 1
+repositories:
+  - type: remote
+    url: https://github.com/owner/repo.git
+    branch: main
+settings:
+  max_file_size_mb: 10
+  enable_semantic_search: true
+  default_search_mode: hybrid
+```

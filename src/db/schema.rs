@@ -2,7 +2,7 @@ use rusqlite::Connection;
 
 use crate::error::Result;
 
-pub const SCHEMA_VERSION: i32 = 2;
+pub const SCHEMA_VERSION: i32 = 3;
 
 /// Initialize database schema
 pub fn initialize(conn: &Connection) -> Result<()> {
@@ -52,7 +52,11 @@ fn create_schema(conn: &Connection) -> Result<()> {
             last_indexed_at TEXT,
             file_count INTEGER DEFAULT 0,
             total_size_bytes INTEGER DEFAULT 0,
-            status TEXT DEFAULT 'pending'
+            status TEXT DEFAULT 'pending',
+            source_type TEXT DEFAULT 'local',
+            remote_url TEXT,
+            remote_branch TEXT,
+            last_synced_at TEXT
         );
 
         -- Individual files
@@ -100,6 +104,7 @@ fn create_schema(conn: &Connection) -> Result<()> {
         CREATE INDEX IF NOT EXISTS idx_files_hash ON files(content_hash);
         CREATE INDEX IF NOT EXISTS idx_files_type ON files(file_type);
         CREATE INDEX IF NOT EXISTS idx_embeddings_file ON embeddings(file_id);
+        CREATE INDEX IF NOT EXISTS idx_repos_source_type ON repositories(source_type);
         ",
     )?;
 
@@ -127,5 +132,21 @@ fn migrate(conn: &Connection, from_version: i32) -> Result<()> {
             ",
         )?;
     }
+
+    if from_version < 3 {
+        // Add remote repository support for version 3
+        conn.execute_batch(
+            r"
+            -- Add columns for remote repository support
+            ALTER TABLE repositories ADD COLUMN source_type TEXT DEFAULT 'local';
+            ALTER TABLE repositories ADD COLUMN remote_url TEXT;
+            ALTER TABLE repositories ADD COLUMN remote_branch TEXT;
+            ALTER TABLE repositories ADD COLUMN last_synced_at TEXT;
+
+            CREATE INDEX IF NOT EXISTS idx_repos_source_type ON repositories(source_type);
+            ",
+        )?;
+    }
+
     Ok(())
 }

@@ -2,6 +2,7 @@ mod embedder;
 mod indexer;
 mod markdown;
 mod platform;
+pub mod remote;
 mod searcher;
 mod watcher;
 

@@ -114,7 +114,13 @@ fn test_cli_config_show() {
         .expect("Failed to run binary");
 
     // Config should work (might be first run)
-    assert!(output.status.success() || output.status.code() == Some(0));
+    assert!(
+        output.status.success() || output.status.code() == Some(0),
+        "Config command failed with status: {:?}\nstdout: {}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]

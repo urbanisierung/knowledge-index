@@ -46,9 +46,24 @@ fn run_with_args(args: &Args) -> Result<()> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn run_command(cmd: Commands, args: &Args) -> Result<()> {
     match cmd {
         Commands::Index { path, name } => commands::index::run(&path, name, args),
+        Commands::Add {
+            path,
+            remote,
+            branch,
+            shallow,
+            name,
+        } => commands::add::run(
+            path.as_deref(),
+            remote.as_deref(),
+            branch.as_deref(),
+            shallow,
+            name,
+            args,
+        ),
         Commands::Search {
             query,
             repo,
@@ -71,8 +86,14 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
         ),
         Commands::List {} => commands::list::run(args),
         Commands::Update { path, all } => commands::update::run(path, all, args),
+        Commands::Sync { repo, no_index } => commands::sync::run(repo.as_deref(), no_index, args),
         Commands::Remove { path, force } => commands::remove::run(&path, force, args),
-        Commands::Config { key, value, reset } => commands::config::run(key, value, reset, args),
+        Commands::Config {
+            action,
+            key,
+            value,
+            reset,
+        } => commands::config::run(action, key, value, reset, args),
         Commands::Mcp {} => run_mcp_server(),
         Commands::Watch { all, path } => run_watcher(all, path, args),
         Commands::RebuildEmbeddings { repo } => commands::rebuild_embeddings::run(repo, args),

@@ -1,11 +1,16 @@
+mod add_cmd;
 mod config_cmd;
 mod index_cmd;
 mod list_cmd;
 mod rebuild_embeddings_cmd;
 mod remove_cmd;
 mod search_cmd;
+mod sync_cmd;
 mod update_cmd;
 
+pub mod add {
+    pub use super::add_cmd::run;
+}
 pub mod index {
     pub use super::index_cmd::run;
 }
@@ -23,6 +28,11 @@ pub mod remove {
 }
 pub mod config {
     pub use super::config_cmd::run;
+}
+pub mod sync {
+    #[allow(unused_imports)]
+    pub use super::sync_cmd::background_sync;
+    pub use super::sync_cmd::run;
 }
 pub mod rebuild_embeddings {
     pub use super::rebuild_embeddings_cmd::run;

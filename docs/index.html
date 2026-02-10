@@ -273,6 +273,14 @@
           <h3>🔒 Local-First</h3>
           <p>Your data stays on your machine. Works offline. No cloud dependencies.</p>
         </div>
+        <div class="feature">
+          <h3>🌐 Remote Repos</h3>
+          <p>Add GitHub repos by URL. Auto-cloned, auto-synced, always up-to-date.</p>
+        </div>
+        <div class="feature">
+          <h3>📦 Portable Config</h3>
+          <p>Export/import your setup. One command to replicate on any machine.</p>
+        </div>
       </div>
     </section>
 
@@ -303,7 +311,8 @@
       <pre>cargo install kdex</pre>
       <div class="step"><span class="step-num">2.</span> Index your knowledge</div>
       <pre>kdex index ~/code/my-project
-kdex index ~/Documents/obsidian-vault</pre>
+kdex index ~/Documents/obsidian-vault
+kdex add --remote owner/repo  # Index a GitHub repo</pre>
       <div class="step"><span class="step-num">3.</span> Search everything</div>
       <pre>kdex search "authentication"</pre>
       <div class="step"><span class="step-num">4.</span> Enable AI access</div>
