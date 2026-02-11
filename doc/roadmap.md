@@ -1813,6 +1813,149 @@ Use GitHub API for enhanced remote repository features.
 
 ---
 
+## Phase 14: Advanced Features & Polish
+
+Implement advanced search, knowledge graph features, and developer experience improvements.
+
+**Goal:** Make kdex a power-user tool with fuzzy/regex search, knowledge graph exploration, AI context building, and seamless shell integration.
+
+### Part 14.1: Search Enhancements
+
+Add advanced search modes for power users.
+
+- [x] Fuzzy matching:
+  - [x] Add `--fuzzy` flag to search command
+  - [x] Use Jaro-Winkler similarity for typo tolerance
+  - [x] Score and rank results by similarity
+- [x] Regex search:
+  - [x] Add `--regex` flag to search command
+  - [x] Validate regex pattern with helpful error messages
+  - [x] Scan file contents for matches
+- [ ] Code symbol extraction:
+  - [ ] Parse source files for function/class definitions
+  - [ ] Store symbols in dedicated FTS table
+  - [ ] `kdex symbols <query>` command for fast lookup
+- [ ] Search history in TUI:
+  - [ ] Store last N search queries in config
+  - [ ] Show history dropdown on empty search input
+  - [ ] Up arrow to recall previous query
+
+### Part 14.2: Knowledge Graph Features
+
+Enable Obsidian-style knowledge exploration.
+
+- [x] Backlinks command:
+  - [x] `kdex backlinks <file>` finds files linking to target
+  - [x] Database schema for links table
+  - [x] JSON output for tooling integration
+- [x] Tags command:
+  - [x] `kdex tags` lists all tags with counts
+  - [x] Database schema for tags table
+  - [x] Add `--tag` filter to search (placeholder)
+- [x] Parse wiki-links during indexing:
+  - [x] Extract `[[link]]` and `[[link|alias]]` syntax
+  - [x] Store in links table with source file and target
+  - [x] Handle relative paths and file extensions
+- [x] Extract tags during indexing:
+  - [x] Parse YAML frontmatter for `tags:` field
+  - [x] Support both array and comma-separated formats
+  - [x] Store in tags table for efficient queries
+- [ ] Graph visualization:
+  - [ ] `kdex graph` exports DOT format for Graphviz
+  - [ ] `kdex graph --json` for web visualization tools
+  - [ ] Option to filter by repo or tag
+- [ ] Daily notes support:
+  - [ ] Recognize date patterns in filenames (YYYY-MM-DD, etc.)
+  - [ ] `--date-range` filter for search
+- [ ] Orphan and broken link detection:
+  - [ ] `kdex health` command reports orphan notes
+  - [ ] List broken `[[links]]` pointing to non-existent files
+
+### Part 14.3: Repository & Vault Features
+
+Smart handling of different repository types.
+
+- [ ] Repository groups:
+  - [ ] Config: define groups like `work`, `personal`, `notes`
+  - [ ] `kdex search --group work` filters by group
+  - [ ] TUI tab per group
+- [ ] Git integration:
+  - [ ] Option to only index git-tracked files
+  - [ ] Show current branch in `kdex list`
+  - [ ] Exclude `.git` directory (already done)
+- [ ] Priority indexing:
+  - [ ] Mark repos as high-priority in config
+  - [ ] Update high-priority repos more frequently
+  - [ ] Show priority status in list
+- [ ] Vault presets:
+  - [ ] Auto-detect Obsidian (`.obsidian/` folder)
+  - [ ] Auto-detect Logseq (`logseq/` folder)
+  - [ ] Apply optimal settings for each vault type
+
+### Part 14.4: AI Context Features
+
+Enhance AI workflows with smarter context building.
+
+- [x] Context builder:
+  - [x] `kdex context <query>` gathers relevant files
+  - [x] Respect token limits with `--tokens` flag
+  - [x] Output in markdown, text, or JSON format
+- [ ] Prompt templates:
+  - [ ] Store templates in `~/.config/kdex/prompts/`
+  - [ ] `kdex prompt list` shows available templates
+  - [ ] `kdex prompt run <template> <query>` fills template with search results
+  - [ ] Built-in templates: code-review, explain, refactor
+- [ ] Summarization hints for MCP:
+  - [ ] Add file summaries to MCP responses
+  - [ ] Include file type, size, last modified
+  - [ ] Truncate long files with "see full file" hint
+- [ ] Note-to-context:
+  - [ ] Given a note, find all linked notes and code
+  - [ ] Build comprehensive context for AI
+  - [ ] `kdex context --from-note <file>`
+
+### Part 14.5: Developer Experience
+
+Make kdex feel native in developer workflows.
+
+- [x] Shell completions:
+  - [x] `kdex completions bash|zsh|fish|powershell|elvish`
+  - [x] Document installation in help text
+  - [x] Use clap_complete for generation
+- [ ] Editor plugins:
+  - [ ] VSCode extension: search panel, quick open
+  - [ ] Neovim plugin: Telescope integration
+  - [ ] Obsidian plugin: search indexed repos from vault
+- [ ] Enhanced watch mode:
+  - [ ] Desktop notifications on index updates
+  - [ ] `--notify` flag for watch command
+  - [ ] macOS: terminal-notifier, Linux: notify-send
+- [ ] Launcher integrations:
+  - [ ] Alfred workflow for macOS
+  - [ ] Raycast extension
+  - [ ] Document generic launcher setup
+
+### Part 14.6: Analytics & Health
+
+Understand and maintain your knowledge index.
+
+- [ ] Usage statistics:
+  - [ ] Track search queries (opt-in)
+  - [ ] Most accessed files
+  - [ ] `kdex stats` shows usage summary
+- [ ] Index health diagnostics:
+  - [ ] `kdex health` checks for issues
+  - [ ] Detect stale repos (files changed, not re-indexed)
+  - [ ] Detect orphaned database entries
+  - [ ] Suggest cleanup actions
+- [x] Knowledge statistics:
+  - [x] `kdex stats` shows totals
+  - [x] Files indexed, by type
+  - [x] Words, tags, links count
+  - [x] Storage size (database, embeddings)
+
+---
+
 ## Brainstormed Additional Features
 
 Ideas for future consideration:

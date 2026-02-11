@@ -1168,6 +1168,102 @@ impl Database {
 
         Ok(backlinks)
     }
+
+    /// Add tags for a file (replaces existing tags)
+    pub fn add_tags(&self, file_id: i64, tags: &[String]) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        // First delete existing tags for this file
+        conn.execute("DELETE FROM tags WHERE file_id = ?1", [file_id])?;
+
+        // Insert new tags
+        for tag in tags {
+            conn.execute(
+                "INSERT INTO tags (file_id, tag) VALUES (?1, ?2)",
+                rusqlite::params![file_id, tag],
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Add links for a file (replaces existing links).
+    /// Each link is a tuple of (target name, optional line number).
+    pub fn add_links(&self, file_id: i64, links: &[(String, Option<usize>)]) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        // First delete existing links for this file
+        conn.execute("DELETE FROM links WHERE source_file_id = ?1", [file_id])?;
+
+        // Insert new links
+        for (target_name, line_number) in links {
+            conn.execute(
+                "INSERT INTO links (source_file_id, target_name, link_text, line_number) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![
+                    file_id,
+                    target_name,
+                    target_name, // link_text is same as target for now
+                    line_number.map(|n| i64::try_from(n).unwrap_or(0))
+                ],
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Get knowledge statistics
+    pub fn get_stats(&self) -> Result<KnowledgeStats> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let total_files: i64 = conn.query_row("SELECT COUNT(*) FROM files", [], |row| row.get(0))?;
+        let total_repos: i64 = conn.query_row("SELECT COUNT(*) FROM repositories", [], |row| row.get(0))?;
+
+        // Count by file type
+        let mut stmt = conn.prepare("SELECT file_type, COUNT(*) FROM files GROUP BY file_type")?;
+        let file_counts: Vec<(String, i64)> = stmt
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .filter_map(std::result::Result::ok)
+            .collect();
+
+        let total_tags: i64 = conn.query_row("SELECT COUNT(DISTINCT tag) FROM tags", [], |row| row.get(0)).unwrap_or(0);
+        let total_links: i64 = conn.query_row("SELECT COUNT(*) FROM links", [], |row| row.get(0)).unwrap_or(0);
+        let total_embeddings: i64 = conn.query_row("SELECT COUNT(DISTINCT file_id) FROM embeddings", [], |row| row.get(0)).unwrap_or(0);
+
+        // Database size
+        let db_path = Config::database_path()?;
+        let db_size = std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0);
+
+        Ok(KnowledgeStats {
+            total_files: usize::try_from(total_files).unwrap_or(0),
+            total_repos: usize::try_from(total_repos).unwrap_or(0),
+            file_counts,
+            total_tags: usize::try_from(total_tags).unwrap_or(0),
+            total_links: usize::try_from(total_links).unwrap_or(0),
+            files_with_embeddings: usize::try_from(total_embeddings).unwrap_or(0),
+            database_size_bytes: db_size,
+        })
+    }
+}
+
+/// Knowledge statistics
+#[derive(Debug, Clone)]
+pub struct KnowledgeStats {
+    pub total_files: usize,
+    pub total_repos: usize,
+    pub file_counts: Vec<(String, i64)>,
+    pub total_tags: usize,
+    pub total_links: usize,
+    pub files_with_embeddings: usize,
+    pub database_size_bytes: u64,
 }
 
 /// Vector search result

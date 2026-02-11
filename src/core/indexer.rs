@@ -422,6 +422,21 @@ impl Indexer {
                 &meta.links_json(),
                 &meta.headings_json(),
             );
+
+            // Store tags in dedicated table for efficient queries
+            if !meta.tags.is_empty() {
+                let _ = self.db.add_tags(file_id, &meta.tags);
+            }
+
+            // Store links in dedicated table for backlink discovery
+            if !meta.links.is_empty() {
+                let links: Vec<(String, Option<usize>)> = meta
+                    .links
+                    .into_iter()
+                    .map(|l| (l, None)) // No line numbers for now
+                    .collect();
+                let _ = self.db.add_links(file_id, &links);
+            }
         }
 
         // Generate and store embeddings if enabled

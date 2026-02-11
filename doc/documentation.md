@@ -427,3 +427,22 @@ kdex completions elvish > ~/.elvish/lib/kdex.elv
 ```
 
 After installing completions, restart your shell or source the file.
+
+## Knowledge Statistics
+
+View comprehensive statistics about your knowledge index:
+
+```bash
+# Show all stats
+kdex stats
+
+# Output as JSON for scripting
+kdex stats --json
+```
+
+The stats command displays:
+- **Content**: Number of repositories and total files indexed
+- **File Types**: Breakdown by type (markdown, code, config, etc.)
+- **Knowledge Graph**: Count of tags and wiki-links
+- **Semantic Search**: Embeddings coverage percentage
+- **Storage**: Database size on disk

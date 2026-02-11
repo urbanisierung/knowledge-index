@@ -285,6 +285,9 @@ Or use the shorthand (search is the default command):
         #[arg(long, default_value = "markdown")]
         format: String,
     },
+
+    /// Show knowledge index statistics
+    Stats {},
 }
 
 /// Shell type for completions

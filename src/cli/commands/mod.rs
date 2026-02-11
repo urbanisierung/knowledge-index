@@ -8,6 +8,7 @@ mod list_cmd;
 mod rebuild_embeddings_cmd;
 mod remove_cmd;
 mod search_cmd;
+mod stats_cmd;
 mod sync_cmd;
 mod tags_cmd;
 mod update_cmd;
@@ -46,6 +47,9 @@ pub mod sync {
     #[allow(unused_imports)]
     pub use super::sync_cmd::background_sync;
     pub use super::sync_cmd::run;
+}
+pub mod stats {
+    pub use super::stats_cmd::run;
 }
 pub mod tags {
     pub use super::tags_cmd::run;

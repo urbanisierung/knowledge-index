@@ -4,6 +4,13 @@
 
 ### 2026-02-11
 
+- **Implemented Phase 14 Features: Knowledge Statistics & Data Storage**
+  - Added `stats` command showing file counts, tags, links, embeddings, and storage
+  - Modified indexer to store tags and wiki-links in dedicated database tables
+  - Added `add_tags()` and `add_links()` methods to database layer
+  - Added `get_stats()` method returning comprehensive index statistics
+  - Backlinks and tags commands now return actual data after re-indexing
+
 - **Implemented Phase 14 Features: Search Enhancements & Developer Experience**
   - Added `completions` command for generating shell completions (bash, zsh, fish, PowerShell, elvish)
   - Added `backlinks` command for finding files that link to a target

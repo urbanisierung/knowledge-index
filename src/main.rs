@@ -29,6 +29,7 @@ const KNOWN_COMMANDS: &[&str] = &[
     "backlinks",
     "tags",
     "context",
+    "stats",
     "help",
 ];
 
@@ -174,6 +175,7 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
             tokens,
             format,
         } => commands::context::run(&query, limit, tokens, &format, args),
+        Commands::Stats {} => commands::stats::run(args),
     }
 }
 
