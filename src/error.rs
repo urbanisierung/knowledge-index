@@ -28,6 +28,9 @@ pub enum AppError {
     #[error("File watcher error: {0}")]
     Watcher(#[from] notify::Error),
 
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+
     #[error("Configuration error: {0}")]
     Config(String),
 

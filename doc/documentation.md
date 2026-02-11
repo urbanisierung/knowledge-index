@@ -47,8 +47,8 @@ Launches the full-screen interactive interface.
 | `?` | Toggle help overlay |
 | `Ctrl+Q` | Quit application |
 | `Ctrl+C` | Force quit |
-| `↑`/`Ctrl+K` | Move up |
-| `↓`/`Ctrl+J` | Move down |
+| `↑`/`Ctrl+K` | Move up / Recall previous search (when input empty) |
+| `↓`/`Ctrl+J` | Move down / Navigate search history |
 | `Enter` | Select / Open file |
 | `Esc` | Clear search / Go back |
 | `Ctrl+P` | Toggle preview panel |
@@ -56,6 +56,10 @@ Launches the full-screen interactive interface.
 | `Ctrl+U` | Clear search input |
 | `d` | Delete repository (in Repos view) |
 | `r` | Refresh list (in Repos view) |
+
+**Search History:**
+
+When the search input is empty, use Up/Down arrows to navigate through your previous searches. This makes it easy to repeat or modify previous queries.
 
 ### CLI Mode
 
@@ -87,28 +91,33 @@ kdex index ~/notes --name obsidian-vault
 Options:
 - `--name <NAME>` - Custom name for the repository
 
-### `search`
+### `search` (default command)
 
-Search indexed content.
+Search indexed content. This is the default command, so you can omit `search`:
 
 ```bash
+# Full syntax
 kdex search <QUERY> [OPTIONS]
 
+# Shorthand (search is the default)
+kdex <QUERY> [OPTIONS]
+
 # Examples
-kdex search "async fn"
-kdex search "database connection" --repo api-service
-kdex search "TODO" --type markdown
-kdex search "config" --limit 50
-kdex search "authentication logic" --semantic
-kdex search "error handling" --hybrid
+kdex "async fn"                          # Search (shorthand)
+kdex "database connection" -r api-service # Filter by repo
+kdex TODO -t markdown                     # Filter by file type
+kdex "config" -l 50                       # Limit results
+kdex "authentication" -s                  # Semantic search
+kdex "error handling" -H                  # Hybrid search
 ```
 
 Options:
-- `--repo <NAME>` - Filter by repository name
-- `--type <TYPE>` - Filter by file type (rust, python, markdown, etc.)
-- `--limit <N>` - Maximum results (default: 20)
-- `--semantic` - Use vector/embedding search (requires `enable_semantic_search = true`)
-- `--hybrid` - Combine lexical + semantic search with RRF fusion
+- `-r, --repo <NAME>` - Filter by repository name
+- `-t, --file-type <TYPE>` - Filter by file type (rust, python, markdown, etc.)
+- `-l, --limit <N>` - Maximum results (default: 20)
+- `-g, --group-by-repo` - Group results by repository
+- `-s, --semantic` - Use vector/embedding search (requires `enable_semantic_search = true`)
+- `-H, --hybrid` - Combine lexical + semantic search with RRF fusion
 - `--lexical` - Use full-text search only (default)
 
 ### `list`
@@ -272,6 +281,38 @@ When you remove a remote repository, the cloned directory is also deleted:
 kdex remove owner/repo
 ```
 
+## Vault Detection
+
+kdex automatically detects the type of knowledge vault when you add a repository, providing optimized handling for each.
+
+### Supported Vault Types
+
+| Vault | Detection | Icon |
+|-------|-----------|------|
+| **Obsidian** | `.obsidian/` folder present | 📓 |
+| **Logseq** | `logseq/` folder present | 📔 |
+| **Dendron** | `dendron.yml` or `dendron.code-workspace` present | 🌳 |
+| **Generic** | Default for all other repositories | 📁 |
+
+### Viewing Vault Types
+
+Use `kdex list` to see vault types for all indexed repositories:
+
+```bash
+kdex list
+# Output:
+# 📓 my-obsidian-vault  │ /path/to/vault    │ 1,234 files │ 2h ago
+# 📔 logseq-notes       │ /path/to/logseq   │   567 files │ 1d ago
+# 📁 my-project         │ /path/to/project  │   890 files │ 3h ago
+```
+
+### Future Optimizations
+
+Each vault type may have optimized settings applied:
+- **Obsidian**: Focus on `**/*.md`, exclude `.obsidian/`, `.trash/`
+- **Logseq**: Focus on `pages/**/*.md`, `journals/**/*.md`
+- **Dendron**: Handle hierarchical naming conventions
+
 ## Configuration Import/Export
 
 Easily migrate your kdex setup between machines.
@@ -321,3 +362,164 @@ settings:
   enable_semantic_search: true
   default_search_mode: hybrid
 ```
+
+## Advanced Search
+
+### Fuzzy Search
+
+Use fuzzy search to find results even with typos:
+
+```bash
+kdex search "databse" --fuzzy    # Finds "database"
+kdex "autnetication" --fuzzy     # Finds "authentication"
+```
+
+### Regex Search
+
+Use regex patterns for advanced matching:
+
+```bash
+kdex search "fn\s+\w+" --regex           # Find function definitions
+kdex search "TODO|FIXME" --regex         # Find TODO markers
+kdex search "import .* from" --regex     # Find ES6 imports
+```
+
+### Tag Filter
+
+Filter results by frontmatter tags:
+
+```bash
+kdex search "api" --tag design
+kdex search "bug" --tag priority:high
+```
+
+## Knowledge Graph
+
+### Backlinks
+
+Find files that link to a target file:
+
+```bash
+kdex backlinks my-note.md        # Find files linking to my-note
+kdex backlinks project-idea      # Search by stem name
+kdex backlinks README --json     # JSON output
+```
+
+### Tags
+
+List all tags from indexed markdown files:
+
+```bash
+kdex tags                        # List all tags with counts
+kdex tags --json                 # JSON output
+```
+
+## AI Context Building
+
+### Context Command
+
+Build AI prompts from search results:
+
+```bash
+# Build context for an AI prompt
+kdex context "authentication"
+
+# Limit to 5 files
+kdex context "error handling" -l 5
+
+# Limit by token count
+kdex context "api design" --tokens 2000
+
+# Output as JSON for automation
+kdex context "database schema" --format json
+```
+
+The context command:
+- Searches for relevant files
+- Reads full file contents
+- Estimates token counts (~4 chars/token)
+- Respects token limits (truncates if needed)
+- Outputs in markdown, text, or JSON format
+
+## Shell Completions
+
+Generate shell completions for faster CLI usage:
+
+```bash
+# Bash
+kdex completions bash > ~/.local/share/bash-completion/completions/kdex
+
+# Zsh
+kdex completions zsh > ~/.zfunc/_kdex
+
+# Fish
+kdex completions fish > ~/.config/fish/completions/kdex.fish
+
+# PowerShell
+kdex completions power-shell > $PROFILE.CurrentUserAllHosts
+
+# Elvish
+kdex completions elvish > ~/.elvish/lib/kdex.elv
+```
+
+After installing completions, restart your shell or source the file.
+
+## Knowledge Statistics
+
+View comprehensive statistics about your knowledge index:
+
+```bash
+# Show all stats
+kdex stats
+
+# Output as JSON for scripting
+kdex stats --json
+```
+
+The stats command displays:
+- **Content**: Number of repositories and total files indexed
+- **File Types**: Breakdown by type (markdown, code, config, etc.)
+- **Knowledge Graph**: Count of tags and wiki-links
+- **Semantic Search**: Embeddings coverage percentage
+- **Storage**: Database size on disk
+
+## Graph Visualization
+
+Export your knowledge graph for visualization:
+
+```bash
+# Output DOT format (for Graphviz)
+kdex graph > knowledge.dot
+dot -Tpng knowledge.dot -o knowledge.png
+
+# Output JSON for web visualization tools
+kdex graph --json > knowledge.json
+
+# Graph only one repository
+kdex graph --repo myproject
+```
+
+The graph shows:
+- **Nodes**: Each file in your knowledge base
+- **Edges**: Wiki-links between files (`[[link]]`)
+- **Clusters**: Files grouped by repository
+
+## Health Diagnostics
+
+Check the health of your knowledge index:
+
+```bash
+# Run health check
+kdex health
+
+# Check specific repository
+kdex health --repo myproject
+
+# Output as JSON
+kdex health --json
+```
+
+The health command detects:
+- **Broken Links**: Wiki-links pointing to non-existent files
+- **Orphan Files**: Markdown files with no incoming links
+- **Health Score**: 0-100 score based on link quality

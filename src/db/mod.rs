@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use crate::config::Config;
+use crate::core::VaultType;
 use crate::error::{AppError, Result};
 
 mod schema;
@@ -161,6 +162,7 @@ pub struct Repository {
     pub remote_url: Option<String>,
     pub remote_branch: Option<String>,
     pub last_synced_at: Option<DateTime<Utc>>,
+    pub vault_type: VaultType,
 }
 
 impl Repository {
@@ -259,14 +261,16 @@ impl Database {
             )
         });
         let now = Utc::now();
+        let vault_type = VaultType::detect(&canonical);
 
         conn.execute(
-            "INSERT INTO repositories (path, name, created_at, status) VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO repositories (path, name, created_at, status, vault_type) VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 canonical.to_string_lossy(),
                 name,
                 now.to_rfc3339(),
                 RepoStatus::Pending.as_str(),
+                vault_type.as_str(),
             ],
         )?;
 
@@ -285,6 +289,7 @@ impl Database {
             remote_url: None,
             remote_branch: None,
             last_synced_at: None,
+            vault_type,
         })
     }
 
@@ -302,10 +307,13 @@ impl Database {
             .map_err(|e| AppError::Other(e.to_string()))?;
 
         let now = Utc::now();
+        // For remote repos, we detect vault type after clone completes
+        // For now, use Generic and update later
+        let vault_type = VaultType::Generic;
 
         conn.execute(
-            "INSERT INTO repositories (path, name, created_at, status, source_type, remote_url, remote_branch)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO repositories (path, name, created_at, status, source_type, remote_url, remote_branch, vault_type)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 path.to_string_lossy(),
                 name,
@@ -314,6 +322,7 @@ impl Database {
                 SourceType::Remote.as_str(),
                 remote_url,
                 branch,
+                vault_type.as_str(),
             ],
         )?;
 
@@ -332,6 +341,7 @@ impl Database {
             remote_url: Some(remote_url.to_string()),
             remote_branch: branch.map(String::from),
             last_synced_at: None,
+            vault_type,
         })
     }
 
@@ -345,7 +355,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE path = ?1"
         )?;
 
@@ -372,6 +382,9 @@ impl Database {
                     .get::<_, Option<String>>(11)?
                     .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
+                vault_type: VaultType::from_str(
+                    &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                ),
             })
         });
 
@@ -391,7 +404,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories ORDER BY name"
         )?;
 
@@ -419,6 +432,9 @@ impl Database {
                         .get::<_, Option<String>>(11)?
                         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                         .map(|dt| dt.with_timezone(&Utc)),
+                    vault_type: VaultType::from_str(
+                        &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                    ),
                 })
             })?
             .filter_map(std::result::Result::ok)
@@ -436,7 +452,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE source_type = 'remote' ORDER BY name"
         )?;
 
@@ -462,6 +478,9 @@ impl Database {
                         .get::<_, Option<String>>(11)?
                         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                         .map(|dt| dt.with_timezone(&Utc)),
+                    vault_type: VaultType::from_str(
+                        &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                    ),
                 })
             })?
             .filter_map(std::result::Result::ok)
@@ -495,7 +514,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE id = ?1"
         )?;
 
@@ -522,6 +541,9 @@ impl Database {
                     .get::<_, Option<String>>(11)?
                     .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
+                vault_type: VaultType::from_str(
+                    &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                ),
             })
         });
 
@@ -568,6 +590,20 @@ impl Database {
                 RepoStatus::Ready.as_str(),
                 repo_id,
             ],
+        )?;
+        Ok(())
+    }
+
+    /// Update vault type for a repository (typically after clone completes)
+    #[allow(dead_code)]
+    pub fn update_repository_vault_type(&self, repo_id: i64, vault_type: VaultType) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+        conn.execute(
+            "UPDATE repositories SET vault_type = ?1 WHERE id = ?2",
+            params![vault_type.as_str(), repo_id],
         )?;
         Ok(())
     }
@@ -1111,6 +1147,315 @@ impl Database {
         let count: i64 = conn.query_row("SELECT COUNT(*) FROM embeddings", [], |row| row.get(0))?;
         Ok(count > 0)
     }
+
+    /// Get all unique tags with counts
+    pub fn get_all_tags(&self) -> Result<Vec<(String, usize)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn
+            .prepare("SELECT tag, COUNT(*) as count FROM tags GROUP BY tag ORDER BY count DESC")?;
+
+        let tags = stmt
+            .query_map([], |row| {
+                let tag: String = row.get(0)?;
+                let count: i64 = row.get(1)?;
+                Ok((tag, usize::try_from(count).unwrap_or(0)))
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+
+        Ok(tags)
+    }
+
+    /// Get backlinks to a file (files that link to the given target)
+    #[allow(clippy::type_complexity)]
+    pub fn get_backlinks(
+        &self,
+        target_name: &str,
+    ) -> Result<Vec<(String, String, String, Option<usize>)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn.prepare(
+            r"
+            SELECT f.relative_path, r.name, l.link_text, l.line_number
+            FROM links l
+            JOIN files f ON l.source_file_id = f.id
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE l.target_name = ?1 OR l.target_name LIKE ?2
+            ORDER BY r.name, f.relative_path
+            ",
+        )?;
+
+        // Search for exact match or partial match (file without extension)
+        let pattern = format!("%{target_name}%");
+
+        let backlinks = stmt
+            .query_map(rusqlite::params![target_name, pattern], |row| {
+                let file_path: String = row.get(0)?;
+                let repo_name: String = row.get(1)?;
+                let link_text: String = row.get(2)?;
+                let line_number: Option<i64> = row.get(3)?;
+                Ok((
+                    file_path,
+                    repo_name,
+                    link_text,
+                    line_number.and_then(|n| usize::try_from(n).ok()),
+                ))
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+
+        Ok(backlinks)
+    }
+
+    /// Add tags for a file (replaces existing tags)
+    pub fn add_tags(&self, file_id: i64, tags: &[String]) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        // First delete existing tags for this file
+        conn.execute("DELETE FROM tags WHERE file_id = ?1", [file_id])?;
+
+        // Insert new tags
+        for tag in tags {
+            conn.execute(
+                "INSERT INTO tags (file_id, tag) VALUES (?1, ?2)",
+                rusqlite::params![file_id, tag],
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Add links for a file (replaces existing links).
+    /// Each link is a tuple of (target name, optional line number).
+    pub fn add_links(&self, file_id: i64, links: &[(String, Option<usize>)]) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        // First delete existing links for this file
+        conn.execute("DELETE FROM links WHERE source_file_id = ?1", [file_id])?;
+
+        // Insert new links
+        for (target_name, line_number) in links {
+            conn.execute(
+                "INSERT INTO links (source_file_id, target_name, link_text, line_number) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![
+                    file_id,
+                    target_name,
+                    target_name, // link_text is same as target for now
+                    line_number.map(|n| i64::try_from(n).unwrap_or(0))
+                ],
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Get knowledge statistics
+    pub fn get_stats(&self) -> Result<KnowledgeStats> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let total_files: i64 =
+            conn.query_row("SELECT COUNT(*) FROM files", [], |row| row.get(0))?;
+        let total_repos: i64 =
+            conn.query_row("SELECT COUNT(*) FROM repositories", [], |row| row.get(0))?;
+
+        // Count by file type
+        let mut stmt = conn.prepare("SELECT file_type, COUNT(*) FROM files GROUP BY file_type")?;
+        let file_counts: Vec<(String, i64)> = stmt
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .filter_map(std::result::Result::ok)
+            .collect();
+
+        let total_tags: i64 = conn
+            .query_row("SELECT COUNT(DISTINCT tag) FROM tags", [], |row| row.get(0))
+            .unwrap_or(0);
+        let total_links: i64 = conn
+            .query_row("SELECT COUNT(*) FROM links", [], |row| row.get(0))
+            .unwrap_or(0);
+        let total_embeddings: i64 = conn
+            .query_row(
+                "SELECT COUNT(DISTINCT file_id) FROM embeddings",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        // Database size
+        let db_path = Config::database_path()?;
+        let db_size = std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0);
+
+        Ok(KnowledgeStats {
+            total_files: usize::try_from(total_files).unwrap_or(0),
+            total_repos: usize::try_from(total_repos).unwrap_or(0),
+            file_counts,
+            total_tags: usize::try_from(total_tags).unwrap_or(0),
+            total_links: usize::try_from(total_links).unwrap_or(0),
+            files_with_embeddings: usize::try_from(total_embeddings).unwrap_or(0),
+            database_size_bytes: db_size,
+        })
+    }
+
+    /// Get all links for graph visualization.
+    /// Returns vector of `GraphLink` structs.
+    pub fn get_all_links(&self, repo_filter: Option<&str>) -> Result<Vec<GraphLink>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let query = if repo_filter.is_some() {
+            r"
+            SELECT f.relative_path, r.name, l.target_name
+            FROM links l
+            JOIN files f ON l.source_file_id = f.id
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE r.name = ?1
+            ORDER BY f.relative_path
+            "
+        } else {
+            r"
+            SELECT f.relative_path, r.name, l.target_name
+            FROM links l
+            JOIN files f ON l.source_file_id = f.id
+            JOIN repositories r ON f.repo_id = r.id
+            ORDER BY r.name, f.relative_path
+            "
+        };
+
+        let mut stmt = conn.prepare(query)?;
+
+        let links = if let Some(repo) = repo_filter {
+            stmt.query_map([repo], |row| {
+                Ok(GraphLink {
+                    source_path: row.get(0)?,
+                    source_repo: row.get(1)?,
+                    target_name: row.get(2)?,
+                })
+            })?
+            .filter_map(std::result::Result::ok)
+            .collect()
+        } else {
+            stmt.query_map([], |row| {
+                Ok(GraphLink {
+                    source_path: row.get(0)?,
+                    source_repo: row.get(1)?,
+                    target_name: row.get(2)?,
+                })
+            })?
+            .filter_map(std::result::Result::ok)
+            .collect()
+        };
+
+        Ok(links)
+    }
+
+    /// Get all indexed file paths for health checks
+    pub fn get_all_file_paths(&self) -> Result<Vec<(String, String)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn.prepare(
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            ORDER BY r.name, f.relative_path
+            ",
+        )?;
+
+        let paths = stmt
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .filter_map(std::result::Result::ok)
+            .collect();
+
+        Ok(paths)
+    }
+
+    /// Get files with no incoming links (orphans)
+    pub fn get_orphan_files(&self, repo_filter: Option<&str>) -> Result<Vec<(String, String)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let query = if repo_filter.is_some() {
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE r.name = ?1
+              AND f.file_type = 'markdown'
+              AND NOT EXISTS (
+                SELECT 1 FROM links l
+                WHERE l.target_name = f.relative_path
+                   OR f.relative_path LIKE '%' || l.target_name || '%'
+              )
+            ORDER BY f.relative_path
+            "
+        } else {
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE f.file_type = 'markdown'
+              AND NOT EXISTS (
+                SELECT 1 FROM links l
+                WHERE l.target_name = f.relative_path
+                   OR f.relative_path LIKE '%' || l.target_name || '%'
+              )
+            ORDER BY r.name, f.relative_path
+            "
+        };
+
+        let mut stmt = conn.prepare(query)?;
+
+        let orphans = if let Some(repo) = repo_filter {
+            stmt.query_map([repo], |row| Ok((row.get(0)?, row.get(1)?)))?
+                .filter_map(std::result::Result::ok)
+                .collect()
+        } else {
+            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                .filter_map(std::result::Result::ok)
+                .collect()
+        };
+
+        Ok(orphans)
+    }
+}
+
+/// Link for graph visualization
+#[derive(Debug, Clone)]
+pub struct GraphLink {
+    pub source_path: String,
+    pub source_repo: String,
+    pub target_name: String,
+}
+
+/// Knowledge statistics
+#[derive(Debug, Clone)]
+pub struct KnowledgeStats {
+    pub total_files: usize,
+    pub total_repos: usize,
+    pub file_counts: Vec<(String, i64)>,
+    pub total_tags: usize,
+    pub total_links: usize,
+    pub files_with_embeddings: usize,
+    pub database_size_bytes: u64,
 }
 
 /// Vector search result

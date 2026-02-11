@@ -10,17 +10,18 @@ use std::path::PathBuf;
 )]
 #[command(after_help = "Examples:
   kdex                     Launch interactive TUI
+  kdex \"async fn\"          Search for async functions (default)
+  kdex TODO --type markdown Search TODOs in markdown files
   kdex index .             Index current directory
-  kdex index ~/notes       Index Obsidian vault
   kdex add --remote owner/repo   Add remote GitHub repo
-  kdex search \"async fn\"   Search for async functions
-  kdex search \"TODO\" --type markdown
   kdex list                List all indexed repositories
 
+The default command is 'search' - just type your query directly:
+  kdex \"my query\"    →    kdex search \"my query\"
+
 Shell Aliases (add to ~/.bashrc or ~/.zshrc):
-  alias ki='kdex'
-  alias kis='kdex search'
-  alias kii='kdex index .'
+  alias k='kdex'
+  alias kx='kdex'
 ")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
@@ -99,41 +100,57 @@ pub enum Commands {
     #[command(after_help = "Examples:
   kdex search \"database connection\"
   kdex search \"async fn\" --repo api-service
-  kdex search \"TODO\" --type markdown
+  kdex search \"TODO\" --file-type markdown
   kdex search \"error handling\" --semantic
   kdex search \"authentication\" --hybrid
+
+Or use the shorthand (search is the default command):
+  kdex \"database connection\"
+  kdex TODO -t markdown
 ")]
     Search {
         /// Search query (supports phrases and wildcards)
         query: String,
 
         /// Filter by repository name
-        #[arg(long)]
+        #[arg(long, short)]
         repo: Option<String>,
 
         /// Filter by file type (code, markdown, config)
-        #[arg(long, name = "type")]
+        #[arg(long, short = 't')]
         file_type: Option<String>,
 
+        /// Filter by tag (from frontmatter)
+        #[arg(long)]
+        tag: Option<String>,
+
         /// Maximum number of results
-        #[arg(long, default_value = "20")]
+        #[arg(long, short, default_value = "20")]
         limit: usize,
 
         /// Group results by repository
-        #[arg(long)]
+        #[arg(long, short = 'g')]
         group_by_repo: bool,
 
         /// Use semantic (vector) search
-        #[arg(long, conflicts_with_all = ["hybrid", "lexical"])]
+        #[arg(long, short = 's', conflicts_with_all = ["hybrid", "lexical", "fuzzy", "regex"])]
         semantic: bool,
 
         /// Use hybrid search (combines lexical + semantic)
-        #[arg(long, conflicts_with_all = ["semantic", "lexical"])]
+        #[arg(long, short = 'H', conflicts_with_all = ["semantic", "lexical", "fuzzy", "regex"])]
         hybrid: bool,
 
         /// Use lexical (full-text) search (default)
-        #[arg(long, conflicts_with_all = ["semantic", "hybrid"])]
+        #[arg(long, conflicts_with_all = ["semantic", "hybrid", "fuzzy", "regex"])]
         lexical: bool,
+
+        /// Use fuzzy matching (tolerates typos)
+        #[arg(long, conflicts_with_all = ["semantic", "hybrid", "lexical", "regex"])]
+        fuzzy: bool,
+
+        /// Use regex pattern matching
+        #[arg(long, conflicts_with_all = ["semantic", "hybrid", "lexical", "fuzzy"])]
+        regex: bool,
     },
 
     /// Update an existing index
@@ -220,6 +237,97 @@ pub enum Commands {
         #[arg(long)]
         repo: Option<String>,
     },
+
+    /// Generate shell completions
+    #[command(after_help = "Examples:
+  kdex completions bash > ~/.local/share/bash-completion/completions/kdex
+  kdex completions zsh > ~/.zfunc/_kdex
+  kdex completions fish > ~/.config/fish/completions/kdex.fish
+")]
+    Completions {
+        /// Shell to generate completions for
+        shell: Shell,
+    },
+
+    /// Find files that link to a target file (backlinks)
+    #[command(after_help = "Examples:
+  kdex backlinks my-note.md      Find files linking to my-note
+  kdex backlinks project-idea    Find backlinks by stem name
+")]
+    Backlinks {
+        /// Target file to find backlinks for
+        file: PathBuf,
+    },
+
+    /// List all tags from indexed files
+    #[command(after_help = "Extracts tags from YAML frontmatter in markdown files.")]
+    Tags,
+
+    /// Build AI context from search results
+    #[command(after_help = "Examples:
+  kdex context \"authentication\"         Build context for AI prompt
+  kdex context \"error handling\" -l 5    Limit to 5 files
+  kdex context \"api design\" --tokens 2000  Limit by tokens
+")]
+    Context {
+        /// Search query to find relevant files
+        query: String,
+
+        /// Maximum number of files to include
+        #[arg(long, short, default_value = "10")]
+        limit: usize,
+
+        /// Maximum approximate tokens
+        #[arg(long, default_value = "4000")]
+        tokens: usize,
+
+        /// Output format (markdown, text, json)
+        #[arg(long, default_value = "markdown")]
+        format: String,
+    },
+
+    /// Show knowledge index statistics
+    Stats {},
+
+    /// Export knowledge graph visualization
+    #[command(after_help = "Examples:
+  kdex graph                    Output DOT format (for Graphviz)
+  kdex graph --json             Output JSON for web visualization
+  kdex graph --repo myproject   Graph only one repository
+  kdex graph > graph.dot && dot -Tpng graph.dot -o graph.png
+")]
+    Graph {
+        /// Output format (dot, json)
+        #[arg(long, default_value = "dot")]
+        format: String,
+
+        /// Filter by repository name
+        #[arg(long, short)]
+        repo: Option<String>,
+    },
+
+    /// Check knowledge index health
+    #[command(after_help = "Examples:
+  kdex health                   Run all health checks
+  kdex health --repo myproject  Check specific repository
+  kdex health --json            Output as JSON
+")]
+    Health {
+        /// Filter by repository name
+        #[arg(long, short)]
+        repo: Option<String>,
+    },
+}
+
+/// Shell type for completions
+#[derive(Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+#[allow(clippy::enum_variant_names)]
+pub enum Shell {
+    Bash,
+    Zsh,
+    Fish,
+    PowerShell,
+    Elvish,
 }
 
 #[derive(Subcommand, Clone)]

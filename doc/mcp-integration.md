@@ -146,6 +146,42 @@ GitHub Copilot CLI supports MCP servers for enhanced context. Add kdex to your M
 
 After configuration, Copilot CLI can search your indexed repositories, retrieve file contents, and get code context automatically.
 
+### Gemini CLI
+
+[Gemini CLI](https://geminicli.com/) supports MCP servers for extending its capabilities. Add kdex to your settings:
+
+**Location:** `~/.gemini/settings.json`
+
+```json
+{
+  "mcpServers": {
+    "kdex": {
+      "command": "kdex",
+      "args": ["mcp"],
+      "timeout": 30000
+    }
+  }
+}
+```
+
+**Configuration options:**
+- `command`: Path to kdex binary (ensure it's in your PATH)
+- `args`: Arguments to pass (just `["mcp"]` for the MCP server)
+- `timeout`: Request timeout in milliseconds (default: 600000)
+- `trust`: Set to `true` to skip confirmation prompts for kdex tools
+
+**Usage in Gemini CLI:**
+
+Once configured, you can ask Gemini to search your indexed content:
+
+```
+> Search my codebase for authentication patterns
+> Find all markdown files about API design
+> Get the contents of src/main.rs from my-project
+```
+
+Gemini will automatically use kdex's MCP tools (`search`, `list_repos`, `get_file`, `get_context`) to answer your questions with context from your indexed repositories.
+
 ### Shell Aliases
 
 Add these to your `.bashrc` or `.zshrc` for quick access:

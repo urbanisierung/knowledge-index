@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{Config, SearchHistory};
 use crate::core::Searcher;
 use crate::db::{Database, Repository, SearchResult};
 
@@ -72,6 +72,10 @@ pub struct App {
     // Loading indicator
     pub loading: bool,
     pub loading_message: Option<String>,
+
+    // Search history
+    pub search_history: SearchHistory,
+    pub history_index: Option<usize>,
 }
 
 impl App {
@@ -79,6 +83,7 @@ impl App {
         let searcher = Searcher::new(db.clone());
         let repos = db.list_repositories().unwrap_or_default();
         let first_run = repos.is_empty();
+        let search_history = SearchHistory::load().unwrap_or_default();
 
         Self {
             db,
@@ -104,6 +109,8 @@ impl App {
             status_message: None,
             loading: false,
             loading_message: None,
+            search_history,
+            history_index: None,
         }
     }
 
@@ -121,6 +128,11 @@ impl App {
 
         self.search_loading = true;
 
+        // Add to search history
+        self.search_history.add(&self.search_input);
+        let _ = self.search_history.save(); // Ignore save errors
+        self.history_index = None; // Reset history navigation
+
         match self.searcher.search(&self.search_input, None, None, 50, 0) {
             Ok(results) => {
                 self.search_results = results;
@@ -137,6 +149,42 @@ impl App {
     /// Refresh repository list
     pub fn refresh_repos(&mut self) {
         self.repos = self.db.list_repositories().unwrap_or_default();
+    }
+
+    /// Navigate to previous search in history
+    pub fn history_up(&mut self) {
+        if self.search_history.is_empty() {
+            return;
+        }
+
+        let new_index = match self.history_index {
+            None => 0,
+            Some(i) if i + 1 < self.search_history.len() => i + 1,
+            Some(i) => i, // Already at oldest
+        };
+
+        if let Some(query) = self.search_history.get(new_index) {
+            self.search_input = query.clone();
+            self.history_index = Some(new_index);
+        }
+    }
+
+    /// Navigate to next search in history
+    pub fn history_down(&mut self) {
+        match self.history_index {
+            None => {} // Not in history mode
+            Some(0) => {
+                // Back to empty/current input
+                self.search_input.clear();
+                self.history_index = None;
+            }
+            Some(i) => {
+                if let Some(query) = self.search_history.get(i - 1) {
+                    self.search_input = query.clone();
+                    self.history_index = Some(i - 1);
+                }
+            }
+        }
     }
 
     /// Set status message

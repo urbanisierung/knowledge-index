@@ -37,6 +37,7 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **MCP List Repos Tool** | List repositories via MCP | 2026-02-07 |
 | **MCP Get File Tool** | Retrieve file content via MCP | 2026-02-07 |
 | **MCP Get Context Tool** | Get line context around specific lines via MCP | 2026-02-07 |
+| **Gemini CLI Integration** | MCP integration docs for Gemini CLI | 2026-02-11 |
 | **Semantic Search** | Vector-based search using MiniLM embeddings | 2026-02-08 |
 | **Hybrid Search** | Combined lexical + semantic search with RRF fusion | 2026-02-08 |
 | **Text Chunking** | Smart chunking for embedding large files | 2026-02-08 |
@@ -68,6 +69,20 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **Config Import** | Import configuration with merge support | 2026-02-09 |
 | **Shallow Clone** | Optional shallow clone for faster setup | 2026-02-09 |
 | **Remote Cleanup** | Auto-delete cloned repos when removed from index | 2026-02-09 |
+| **Default Search** | Search without typing `search` - just `kdex "query"` | 2026-02-11 |
+| **Short Flags** | `-r`, `-t`, `-l`, `-s`, `-H`, `-g` for faster searching | 2026-02-11 |
+| **Shell Completions** | Generate completions for bash, zsh, fish, PowerShell | 2026-02-11 |
+| **Fuzzy Search** | Typo-tolerant search using Jaro-Winkler similarity | 2026-02-11 |
+| **Regex Search** | Pattern matching with regular expressions | 2026-02-11 |
+| **Backlinks Discovery** | Find files linking to a target (`[[wiki-links]]`) | 2026-02-11 |
+| **Tags Browser** | List all tags from indexed markdown frontmatter | 2026-02-11 |
+| **Context Builder** | Build AI prompts from search results with token limits | 2026-02-11 |
+| **Knowledge Statistics** | View index stats (files, repos, tags, links, storage) | 2026-02-11 |
+| **Tags/Links Indexing** | Store tags and wiki-links during indexing for backlinks | 2026-02-11 |
+| **Graph Visualization** | Export knowledge graph in DOT (Graphviz) or JSON format | 2026-02-11 |
+| **Health Diagnostics** | Find orphan files, broken links, and health score | 2026-02-11 |
+| **Vault Auto-Detection** | Auto-detect Obsidian, Logseq, Dendron vaults | 2026-02-11 |
+| **Search History** | Navigate previous searches with Up/Down arrows in TUI | 2026-02-11 |
 
 ## Planned Features
 

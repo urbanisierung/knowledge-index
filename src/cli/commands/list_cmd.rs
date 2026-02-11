@@ -2,6 +2,7 @@ use chrono::Utc;
 use owo_colors::OwoColorize;
 
 use crate::cli::args::Args;
+use crate::core::VaultType;
 use crate::db::{Database, RepoStatus, SourceType};
 use crate::error::Result;
 
@@ -43,6 +44,7 @@ pub fn run(args: &Args) -> Result<()> {
                     "total_size_bytes": r.total_size_bytes,
                     "status": r.status.as_str(),
                     "source_type": r.source_type.as_str(),
+                    "vault_type": r.vault_type.as_str(),
                     "remote_url": r.remote_url,
                     "remote_branch": r.remote_branch,
                     "last_indexed_at": r.last_indexed_at.map(|dt| dt.to_rfc3339()),
@@ -96,16 +98,18 @@ pub fn run(args: &Args) -> Result<()> {
                 }
             };
 
-            // Source type indicator
-            let source_indicator = match repo.source_type {
-                SourceType::Remote => {
-                    if colors {
-                        "☁".dimmed().to_string()
-                    } else {
-                        "☁".to_string()
+            // Vault type indicator (replaces source indicator)
+            let vault_icon = match repo.vault_type {
+                VaultType::Obsidian => "📓",
+                VaultType::Logseq => "📔",
+                VaultType::Dendron => "🌳",
+                VaultType::Generic => {
+                    // Use source indicator for generic repos
+                    match repo.source_type {
+                        SourceType::Remote => "☁ ",
+                        SourceType::Local => "📁",
                     }
                 }
-                SourceType::Local => " ".to_string(),
             };
 
             // Format time ago
@@ -120,9 +124,9 @@ pub fn run(args: &Args) -> Result<()> {
 
             if colors {
                 println!(
-                    "{}{} {:<20} │ {:>6} files │ {:>8} │ {}",
+                    "{} {} {:<20} │ {:>6} files │ {:>8} │ {}",
                     status_icon,
-                    source_indicator,
+                    vault_icon,
                     repo.name.blue(),
                     repo.file_count,
                     size_str,
@@ -130,8 +134,8 @@ pub fn run(args: &Args) -> Result<()> {
                 );
             } else {
                 println!(
-                    "{}{} {:<20} │ {:>6} files │ {:>8} │ {}",
-                    status_icon, source_indicator, repo.name, repo.file_count, size_str, time_ago
+                    "{} {} {:<20} │ {:>6} files │ {:>8} │ {}",
+                    status_icon, vault_icon, repo.name, repo.file_count, size_str, time_ago
                 );
             }
         }

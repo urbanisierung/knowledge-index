@@ -2,6 +2,54 @@
 
 ## Changelog
 
+### 2026-02-11
+
+- **Documentation & Landing Page Update**
+  - Added Gemini CLI integration example to MCP documentation
+  - Added full documentation section to landing page with all commands and options
+  - Replaced external documentation links with in-page anchor links
+  - Added Gemini CLI to AI integrations showcase
+
+- **Implemented Phase 14 Features: Vault Presets & Search History**
+  - Added VaultType enum with Obsidian, Logseq, Dendron, Generic variants
+  - Auto-detect vault type when adding repositories (checks for `.obsidian/`, `logseq/`, `dendron.yml`)
+  - Store vault type in database schema v5
+  - Display vault type icons in `kdex list` output
+  - Added SearchHistory with persistence to JSON (`~/.config/kdex/search_history.json`)
+  - TUI search history navigation with Up/Down arrows when input is empty
+  - Show history hint in empty search state
+
+- **Implemented Phase 14 Features: Graph Visualization & Health Diagnostics**
+  - Added `graph` command exporting DOT format for Graphviz visualization
+  - Added `graph --json` for JSON output (web visualization tools)
+  - Added `health` command with orphan detection and broken link checking
+  - Health score (0-100) based on link quality and file connectivity
+  - Added `get_all_links()`, `get_all_file_paths()`, `get_orphan_files()` methods
+
+- **Implemented Phase 14 Features: Knowledge Statistics & Data Storage**
+  - Added `stats` command showing file counts, tags, links, embeddings, and storage
+  - Modified indexer to store tags and wiki-links in dedicated database tables
+  - Added `add_tags()` and `add_links()` methods to database layer
+  - Added `get_stats()` method returning comprehensive index statistics
+  - Backlinks and tags commands now return actual data after re-indexing
+
+- **Implemented Phase 14 Features: Search Enhancements & Developer Experience**
+  - Added `completions` command for generating shell completions (bash, zsh, fish, PowerShell, elvish)
+  - Added `backlinks` command for finding files that link to a target
+  - Added `tags` command for listing all tags from indexed files
+  - Added `context` command for building AI prompts from search results with token limits
+  - Added `--fuzzy` flag for typo-tolerant search using Jaro-Winkler similarity
+  - Added `--regex` flag for pattern matching with regular expressions
+  - Added `--tag` flag for filtering by frontmatter tags (placeholder)
+  - Extended database schema (v4) with dedicated tags and links tables
+  - Added clap_complete, strsim, regex dependencies
+
+- **Default Search Command**
+  - Search is now the default command: `kdex "query"` works without typing `search`
+  - Added short flags for search: `-r` (repo), `-t` (file-type), `-l` (limit), `-s` (semantic), `-H` (hybrid), `-g` (group-by-repo)
+  - Argument rewriting detects if first arg is not a known command and treats it as a search query
+  - Updated help text and documentation
+
 ### 2026-02-10
 
 - **Implemented Phase 13: Remote Repositories & Configuration Portability**

@@ -198,6 +198,41 @@
       font-size: 0.9rem;
     }
 
+    /* Documentation */
+    .docs h3 {
+      font-size: 1.25rem;
+      margin: 2rem 0 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .docs h3:first-of-type { border-top: none; margin-top: 1rem; }
+    .docs h4 {
+      font-size: 1rem;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--accent);
+    }
+    .docs p { margin-bottom: 0.5rem; }
+    .docs pre { margin-bottom: 1rem; }
+    .docs-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.75rem 0 1.5rem;
+      font-size: 0.9rem;
+    }
+    .docs-table th, .docs-table td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+    }
+    .docs-table th {
+      background: var(--bg-alt);
+      font-weight: 600;
+    }
+    .docs-table td code {
+      background: transparent;
+      padding: 0;
+    }
+
     /* Footer */
     footer {
       text-align: center;
@@ -225,7 +260,7 @@
       </div>
       <div class="cta-row">
         <a href="https://github.com/urbanisierung/kdex" class="btn btn-primary">View on GitHub</a>
-        <a href="https://github.com/urbanisierung/kdex/blob/main/doc/documentation.md" class="btn btn-secondary">Documentation</a>
+        <a href="#docs" class="btn btn-secondary">Documentation</a>
       </div>
     </header>
 
@@ -298,6 +333,10 @@
           <div>Claude Desktop</div>
         </div>
         <div class="integration">
+          <div class="logo">💎</div>
+          <div>Gemini CLI</div>
+        </div>
+        <div class="integration">
           <div class="logo">🦙</div>
           <div>Ollama</div>
         </div>
@@ -311,19 +350,215 @@
       <pre>cargo install kdex</pre>
       <div class="step"><span class="step-num">2.</span> Index your knowledge</div>
       <pre>kdex index ~/code/my-project
-kdex index ~/Documents/obsidian-vault
 kdex add --remote owner/repo  # Index a GitHub repo</pre>
       <div class="step"><span class="step-num">3.</span> Search everything</div>
-      <pre>kdex search "authentication"</pre>
+      <pre>kdex "authentication"  # Just type your query!</pre>
       <div class="step"><span class="step-num">4.</span> Enable AI access</div>
       <pre>kdex mcp  # Start MCP server for AI assistants</pre>
+    </section>
+
+    <!-- Full Documentation -->
+    <section id="docs" class="docs">
+      <h2><span class="icon">📖</span> Documentation</h2>
+      
+      <h3>Installation</h3>
+      <pre>cargo install kdex</pre>
+      <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem;">Or build from source: <code>cargo build --release</code></p>
+
+      <h3>App Mode (TUI)</h3>
+      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Launch the full-screen interactive interface:</p>
+      <pre>kdex</pre>
+      <table class="docs-table">
+        <tr><th>Key</th><th>Action</th></tr>
+        <tr><td><code>Tab</code></td><td>Switch between Search and Repos views</td></tr>
+        <tr><td><code>?</code></td><td>Toggle help overlay</td></tr>
+        <tr><td><code>Ctrl+Q</code></td><td>Quit application</td></tr>
+        <tr><td><code>↑</code>/<code>↓</code></td><td>Navigate results or browse search history</td></tr>
+        <tr><td><code>Enter</code></td><td>Select / Open file</td></tr>
+        <tr><td><code>Esc</code></td><td>Clear search / Go back</td></tr>
+        <tr><td><code>Ctrl+P</code></td><td>Toggle preview panel</td></tr>
+        <tr><td><code>Ctrl+O</code></td><td>Open file in editor</td></tr>
+      </table>
+
+      <h3>CLI Commands</h3>
+      
+      <h4>search</h4>
+      <p style="color: var(--text-muted);">Search indexed content (default command — just type your query!)</p>
+      <pre>kdex "your query"
+kdex search "pattern" --repo my-project --file-type rust
+kdex "auth" --fuzzy --limit 20</pre>
+      <table class="docs-table">
+        <tr><th>Flag</th><th>Short</th><th>Description</th></tr>
+        <tr><td><code>--repo</code></td><td><code>-r</code></td><td>Filter by repository name</td></tr>
+        <tr><td><code>--file-type</code></td><td><code>-t</code></td><td>Filter by file type (rust, markdown, python...)</td></tr>
+        <tr><td><code>--limit</code></td><td><code>-l</code></td><td>Maximum results (default: 10)</td></tr>
+        <tr><td><code>--semantic</code></td><td><code>-s</code></td><td>Use semantic (vector) search</td></tr>
+        <tr><td><code>--hybrid</code></td><td><code>-H</code></td><td>Combine lexical + semantic search</td></tr>
+        <tr><td><code>--fuzzy</code></td><td></td><td>Typo-tolerant fuzzy matching</td></tr>
+        <tr><td><code>--regex</code></td><td></td><td>Regular expression search</td></tr>
+        <tr><td><code>--group-by-repo</code></td><td><code>-g</code></td><td>Cluster results by repository</td></tr>
+      </table>
+
+      <h4>index</h4>
+      <p style="color: var(--text-muted);">Add and index a local directory</p>
+      <pre>kdex index /path/to/project
+kdex index . --name "my-docs"</pre>
+      <table class="docs-table">
+        <tr><th>Flag</th><th>Description</th></tr>
+        <tr><td><code>--name</code></td><td>Custom name for the repository</td></tr>
+      </table>
+
+      <h4>add</h4>
+      <p style="color: var(--text-muted);">Add a remote GitHub repository</p>
+      <pre>kdex add --remote owner/repo
+kdex add --remote https://github.com/owner/repo.git --branch develop
+kdex add --remote owner/repo --shallow</pre>
+      <table class="docs-table">
+        <tr><th>Flag</th><th>Description</th></tr>
+        <tr><td><code>--remote</code></td><td>GitHub repo (owner/repo or full URL)</td></tr>
+        <tr><td><code>--branch</code></td><td>Branch to clone (default: main)</td></tr>
+        <tr><td><code>--name</code></td><td>Custom repository name</td></tr>
+        <tr><td><code>--shallow</code></td><td>Shallow clone (faster, less disk)</td></tr>
+      </table>
+
+      <h4>list</h4>
+      <p style="color: var(--text-muted);">List all indexed repositories</p>
+      <pre>kdex list
+kdex list --json</pre>
+
+      <h4>remove</h4>
+      <p style="color: var(--text-muted);">Remove a repository from the index</p>
+      <pre>kdex remove my-project</pre>
+
+      <h4>sync</h4>
+      <p style="color: var(--text-muted);">Sync remote repositories</p>
+      <pre>kdex sync          # Sync all remote repos
+kdex sync owner/repo  # Sync specific repo</pre>
+
+      <h4>stats</h4>
+      <p style="color: var(--text-muted);">Show index statistics</p>
+      <pre>kdex stats</pre>
+
+      <h4>graph</h4>
+      <p style="color: var(--text-muted);">Export knowledge graph</p>
+      <pre>kdex graph > knowledge.dot       # DOT format for Graphviz
+kdex graph --json > graph.json   # JSON format</pre>
+
+      <h4>health</h4>
+      <p style="color: var(--text-muted);">Check index health (orphans, broken links)</p>
+      <pre>kdex health</pre>
+
+      <h4>backlinks</h4>
+      <p style="color: var(--text-muted);">Find files linking to a target</p>
+      <pre>kdex backlinks my-note</pre>
+
+      <h4>tags</h4>
+      <p style="color: var(--text-muted);">List all tags from indexed markdown</p>
+      <pre>kdex tags</pre>
+
+      <h4>context</h4>
+      <p style="color: var(--text-muted);">Build AI context from search results</p>
+      <pre>kdex context "authentication" --tokens 4000 --format markdown</pre>
+      <table class="docs-table">
+        <tr><th>Flag</th><th>Description</th></tr>
+        <tr><td><code>--tokens</code></td><td>Max token limit (default: 8000)</td></tr>
+        <tr><td><code>--format</code></td><td>Output format: markdown, text, json</td></tr>
+      </table>
+
+      <h4>mcp</h4>
+      <p style="color: var(--text-muted);">Start MCP server for AI assistants</p>
+      <pre>kdex mcp</pre>
+
+      <h4>config</h4>
+      <p style="color: var(--text-muted);">Manage configuration</p>
+      <pre>kdex config show              # Show current config
+kdex config export -o backup.yaml   # Export to file
+kdex config import backup.yaml      # Import from file</pre>
+
+      <h4>completions</h4>
+      <p style="color: var(--text-muted);">Generate shell completions</p>
+      <pre>kdex completions bash >> ~/.bashrc
+kdex completions zsh >> ~/.zshrc
+kdex completions fish > ~/.config/fish/completions/kdex.fish</pre>
+
+      <h3>MCP Integration</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">Connect kdex to AI assistants via the Model Context Protocol.</p>
+      
+      <h4>Claude Desktop</h4>
+      <p style="color: var(--text-muted);">Add to <code>~/.config/claude/claude_desktop_config.json</code>:</p>
+      <pre>{
+  "mcpServers": {
+    "kdex": { "command": "kdex", "args": ["mcp"] }
+  }
+}</pre>
+
+      <h4>GitHub Copilot CLI</h4>
+      <p style="color: var(--text-muted);">Add to <code>~/.config/github-copilot/mcp.json</code>:</p>
+      <pre>{
+  "mcpServers": {
+    "kdex": { "command": "kdex", "args": ["mcp"] }
+  }
+}</pre>
+
+      <h4>Gemini CLI</h4>
+      <p style="color: var(--text-muted);">Add to <code>~/.gemini/settings.json</code>:</p>
+      <pre>{
+  "mcpServers": {
+    "kdex": { "command": "kdex", "args": ["mcp"], "timeout": 30000 }
+  }
+}</pre>
+
+      <h4>Ollama (with Open WebUI)</h4>
+      <p style="color: var(--text-muted);">Run kdex MCP server and configure Open WebUI to use it:</p>
+      <pre># Start kdex MCP server
+kdex mcp
+
+# Configure Open WebUI's MCP client to connect to kdex</pre>
+
+      <h3>MCP Tools</h3>
+      <table class="docs-table">
+        <tr><th>Tool</th><th>Description</th></tr>
+        <tr><td><code>search</code></td><td>Search indexed content with query, limit, repo, file_type filters</td></tr>
+        <tr><td><code>list_repos</code></td><td>List all indexed repositories with status and file counts</td></tr>
+        <tr><td><code>get_file</code></td><td>Get full content of a file by path</td></tr>
+        <tr><td><code>get_context</code></td><td>Get lines of context around a specific line number</td></tr>
+      </table>
+
+      <h3>Global Options</h3>
+      <table class="docs-table">
+        <tr><th>Flag</th><th>Description</th></tr>
+        <tr><td><code>--json</code></td><td>Output as JSON for scripting</td></tr>
+        <tr><td><code>--quiet</code></td><td>Suppress non-error output</td></tr>
+        <tr><td><code>--no-color</code></td><td>Disable colored output</td></tr>
+        <tr><td><code>-v, --verbose</code></td><td>Enable verbose output</td></tr>
+        <tr><td><code>--debug</code></td><td>Enable debug mode with backtraces</td></tr>
+      </table>
+
+      <h3>Vault Detection</h3>
+      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">kdex auto-detects knowledge vault types:</p>
+      <table class="docs-table">
+        <tr><th>Icon</th><th>Type</th><th>Detection</th></tr>
+        <tr><td>📓</td><td>Obsidian</td><td><code>.obsidian/</code> folder</td></tr>
+        <tr><td>📔</td><td>Logseq</td><td><code>logseq/</code> folder</td></tr>
+        <tr><td>🌳</td><td>Dendron</td><td><code>dendron.yml</code> file</td></tr>
+        <tr><td>📁</td><td>Generic</td><td>Default for all other repos</td></tr>
+      </table>
+
+      <h3>Configuration</h3>
+      <p style="color: var(--text-muted);">Config file location: <code>~/.config/kdex/config.toml</code></p>
+      <pre># Example config.toml
+max_file_size_mb = 10
+enable_semantic_search = true
+default_search_mode = "hybrid"
+strip_markdown_syntax = false
+index_code_blocks = true</pre>
     </section>
 
     <!-- Footer -->
     <footer>
       <p>
         <a href="https://github.com/urbanisierung/kdex">GitHub</a> ·
-        <a href="https://github.com/urbanisierung/kdex/blob/main/doc/documentation.md">Docs</a> ·
+        <a href="#docs">Docs</a> ·
         <a href="https://github.com/urbanisierung/kdex/blob/main/LICENSE">MIT License</a>
       </p>
       <p style="margin-top: 0.5rem;">Built with 🦀 Rust</p>
