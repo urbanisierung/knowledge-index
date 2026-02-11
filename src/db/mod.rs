@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use crate::config::Config;
+use crate::core::VaultType;
 use crate::error::{AppError, Result};
 
 mod schema;
@@ -161,6 +162,7 @@ pub struct Repository {
     pub remote_url: Option<String>,
     pub remote_branch: Option<String>,
     pub last_synced_at: Option<DateTime<Utc>>,
+    pub vault_type: VaultType,
 }
 
 impl Repository {
@@ -259,14 +261,16 @@ impl Database {
             )
         });
         let now = Utc::now();
+        let vault_type = VaultType::detect(&canonical);
 
         conn.execute(
-            "INSERT INTO repositories (path, name, created_at, status) VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO repositories (path, name, created_at, status, vault_type) VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 canonical.to_string_lossy(),
                 name,
                 now.to_rfc3339(),
                 RepoStatus::Pending.as_str(),
+                vault_type.as_str(),
             ],
         )?;
 
@@ -285,6 +289,7 @@ impl Database {
             remote_url: None,
             remote_branch: None,
             last_synced_at: None,
+            vault_type,
         })
     }
 
@@ -302,10 +307,13 @@ impl Database {
             .map_err(|e| AppError::Other(e.to_string()))?;
 
         let now = Utc::now();
+        // For remote repos, we detect vault type after clone completes
+        // For now, use Generic and update later
+        let vault_type = VaultType::Generic;
 
         conn.execute(
-            "INSERT INTO repositories (path, name, created_at, status, source_type, remote_url, remote_branch)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO repositories (path, name, created_at, status, source_type, remote_url, remote_branch, vault_type)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 path.to_string_lossy(),
                 name,
@@ -314,6 +322,7 @@ impl Database {
                 SourceType::Remote.as_str(),
                 remote_url,
                 branch,
+                vault_type.as_str(),
             ],
         )?;
 
@@ -332,6 +341,7 @@ impl Database {
             remote_url: Some(remote_url.to_string()),
             remote_branch: branch.map(String::from),
             last_synced_at: None,
+            vault_type,
         })
     }
 
@@ -345,7 +355,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE path = ?1"
         )?;
 
@@ -372,6 +382,9 @@ impl Database {
                     .get::<_, Option<String>>(11)?
                     .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
+                vault_type: VaultType::from_str(
+                    &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                ),
             })
         });
 
@@ -391,7 +404,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories ORDER BY name"
         )?;
 
@@ -419,6 +432,9 @@ impl Database {
                         .get::<_, Option<String>>(11)?
                         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                         .map(|dt| dt.with_timezone(&Utc)),
+                    vault_type: VaultType::from_str(
+                        &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                    ),
                 })
             })?
             .filter_map(std::result::Result::ok)
@@ -436,7 +452,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE source_type = 'remote' ORDER BY name"
         )?;
 
@@ -462,6 +478,9 @@ impl Database {
                         .get::<_, Option<String>>(11)?
                         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                         .map(|dt| dt.with_timezone(&Utc)),
+                    vault_type: VaultType::from_str(
+                        &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                    ),
                 })
             })?
             .filter_map(std::result::Result::ok)
@@ -495,7 +514,7 @@ impl Database {
 
         let mut stmt = conn.prepare(
             "SELECT id, path, name, created_at, last_indexed_at, file_count, total_size_bytes, status,
-                    source_type, remote_url, remote_branch, last_synced_at
+                    source_type, remote_url, remote_branch, last_synced_at, vault_type
              FROM repositories WHERE id = ?1"
         )?;
 
@@ -522,6 +541,9 @@ impl Database {
                     .get::<_, Option<String>>(11)?
                     .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
+                vault_type: VaultType::from_str(
+                    &row.get::<_, Option<String>>(12)?.unwrap_or_default(),
+                ),
             })
         });
 
@@ -568,6 +590,20 @@ impl Database {
                 RepoStatus::Ready.as_str(),
                 repo_id,
             ],
+        )?;
+        Ok(())
+    }
+
+    /// Update vault type for a repository (typically after clone completes)
+    #[allow(dead_code)]
+    pub fn update_repository_vault_type(&self, repo_id: i64, vault_type: VaultType) -> Result<()> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+        conn.execute(
+            "UPDATE repositories SET vault_type = ?1 WHERE id = ?2",
+            params![vault_type.as_str(), repo_id],
         )?;
         Ok(())
     }

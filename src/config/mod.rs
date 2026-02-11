@@ -1,3 +1,8 @@
+mod history;
+
+#[allow(unused_imports)]
+pub use history::SearchHistory;
+
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;

@@ -4,6 +4,15 @@
 
 ### 2026-02-11
 
+- **Implemented Phase 14 Features: Vault Presets & Search History**
+  - Added VaultType enum with Obsidian, Logseq, Dendron, Generic variants
+  - Auto-detect vault type when adding repositories (checks for `.obsidian/`, `logseq/`, `dendron.yml`)
+  - Store vault type in database schema v5
+  - Display vault type icons in `kdex list` output
+  - Added SearchHistory with persistence to JSON (`~/.config/kdex/search_history.json`)
+  - TUI search history navigation with Up/Down arrows when input is empty
+  - Show history hint in empty search state
+
 - **Implemented Phase 14 Features: Graph Visualization & Health Diagnostics**
   - Added `graph` command exporting DOT format for Graphviz visualization
   - Added `graph --json` for JSON output (web visualization tools)

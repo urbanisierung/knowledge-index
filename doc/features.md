@@ -80,6 +80,8 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **Tags/Links Indexing** | Store tags and wiki-links during indexing for backlinks | 2026-02-11 |
 | **Graph Visualization** | Export knowledge graph in DOT (Graphviz) or JSON format | 2026-02-11 |
 | **Health Diagnostics** | Find orphan files, broken links, and health score | 2026-02-11 |
+| **Vault Auto-Detection** | Auto-detect Obsidian, Logseq, Dendron vaults | 2026-02-11 |
+| **Search History** | Navigate previous searches with Up/Down arrows in TUI | 2026-02-11 |
 
 ## Planned Features
 

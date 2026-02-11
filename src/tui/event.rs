@@ -118,8 +118,15 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
             app.refresh_repos();
         }
         KeyCode::Down => {
-            app.select_next();
-            app.update_preview_if_visible();
+            // If input is empty and we have history, navigate history
+            if app.search_input.is_empty() && app.history_index.is_some() {
+                app.history_down();
+            } else if app.search_results.is_empty() && !app.search_input.is_empty() {
+                // No results yet, don't navigate
+            } else {
+                app.select_next();
+                app.update_preview_if_visible();
+            }
         }
         // Ctrl+J to move down (works even when typing)
         KeyCode::Char('j') if modifiers.contains(KeyModifiers::CONTROL) => {
@@ -127,8 +134,16 @@ fn handle_search_keys(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
             app.update_preview_if_visible();
         }
         KeyCode::Up => {
-            app.select_prev();
-            app.update_preview_if_visible();
+            // If input is empty or we're navigating history, go through history
+            if app.search_input.is_empty() || app.history_index.is_some() {
+                app.history_up();
+            } else if app.search_results.is_empty() {
+                // No results yet, try history
+                app.history_up();
+            } else {
+                app.select_prev();
+                app.update_preview_if_visible();
+            }
         }
         // Ctrl+K to move up (works even when typing)
         KeyCode::Char('k') if modifiers.contains(KeyModifiers::CONTROL) => {

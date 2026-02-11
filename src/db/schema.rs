@@ -2,7 +2,7 @@ use rusqlite::Connection;
 
 use crate::error::Result;
 
-pub const SCHEMA_VERSION: i32 = 4;
+pub const SCHEMA_VERSION: i32 = 5;
 
 /// Initialize database schema
 pub fn initialize(conn: &Connection) -> Result<()> {
@@ -56,7 +56,8 @@ fn create_schema(conn: &Connection) -> Result<()> {
             source_type TEXT DEFAULT 'local',
             remote_url TEXT,
             remote_branch TEXT,
-            last_synced_at TEXT
+            last_synced_at TEXT,
+            vault_type TEXT DEFAULT 'generic'
         );
 
         -- Individual files
@@ -173,6 +174,15 @@ fn migrate(conn: &Connection, from_version: i32) -> Result<()> {
             );
             CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_name);
             CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_file_id);
+            ",
+        )?;
+    }
+
+    if from_version < 5 {
+        // Add vault type support for version 5
+        conn.execute_batch(
+            r"
+            ALTER TABLE repositories ADD COLUMN vault_type TEXT DEFAULT 'generic';
             ",
         )?;
     }

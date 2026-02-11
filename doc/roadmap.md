@@ -1835,10 +1835,10 @@ Add advanced search modes for power users.
   - [ ] Parse source files for function/class definitions
   - [ ] Store symbols in dedicated FTS table
   - [ ] `kdex symbols <query>` command for fast lookup
-- [ ] Search history in TUI:
-  - [ ] Store last N search queries in config
-  - [ ] Show history dropdown on empty search input
-  - [ ] Up arrow to recall previous query
+- [x] Search history in TUI:
+  - [x] Store last N search queries in config
+  - [x] Show history dropdown on empty search input
+  - [x] Up arrow to recall previous query
 
 ### Part 14.2: Knowledge Graph Features
 
@@ -1887,10 +1887,10 @@ Smart handling of different repository types.
   - [ ] Mark repos as high-priority in config
   - [ ] Update high-priority repos more frequently
   - [ ] Show priority status in list
-- [ ] Vault presets:
-  - [ ] Auto-detect Obsidian (`.obsidian/` folder)
-  - [ ] Auto-detect Logseq (`logseq/` folder)
-  - [ ] Apply optimal settings for each vault type
+- [x] Vault presets:
+  - [x] Auto-detect Obsidian (`.obsidian/` folder)
+  - [x] Auto-detect Logseq (`logseq/` folder)
+  - [x] Apply optimal settings for each vault type
 
 ### Part 14.4: AI Context Features
 

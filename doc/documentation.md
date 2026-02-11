@@ -47,8 +47,8 @@ Launches the full-screen interactive interface.
 | `?` | Toggle help overlay |
 | `Ctrl+Q` | Quit application |
 | `Ctrl+C` | Force quit |
-| `↑`/`Ctrl+K` | Move up |
-| `↓`/`Ctrl+J` | Move down |
+| `↑`/`Ctrl+K` | Move up / Recall previous search (when input empty) |
+| `↓`/`Ctrl+J` | Move down / Navigate search history |
 | `Enter` | Select / Open file |
 | `Esc` | Clear search / Go back |
 | `Ctrl+P` | Toggle preview panel |
@@ -56,6 +56,10 @@ Launches the full-screen interactive interface.
 | `Ctrl+U` | Clear search input |
 | `d` | Delete repository (in Repos view) |
 | `r` | Refresh list (in Repos view) |
+
+**Search History:**
+
+When the search input is empty, use Up/Down arrows to navigate through your previous searches. This makes it easy to repeat or modify previous queries.
 
 ### CLI Mode
 
@@ -276,6 +280,38 @@ When you remove a remote repository, the cloned directory is also deleted:
 ```bash
 kdex remove owner/repo
 ```
+
+## Vault Detection
+
+kdex automatically detects the type of knowledge vault when you add a repository, providing optimized handling for each.
+
+### Supported Vault Types
+
+| Vault | Detection | Icon |
+|-------|-----------|------|
+| **Obsidian** | `.obsidian/` folder present | 📓 |
+| **Logseq** | `logseq/` folder present | 📔 |
+| **Dendron** | `dendron.yml` or `dendron.code-workspace` present | 🌳 |
+| **Generic** | Default for all other repositories | 📁 |
+
+### Viewing Vault Types
+
+Use `kdex list` to see vault types for all indexed repositories:
+
+```bash
+kdex list
+# Output:
+# 📓 my-obsidian-vault  │ /path/to/vault    │ 1,234 files │ 2h ago
+# 📔 logseq-notes       │ /path/to/logseq   │   567 files │ 1d ago
+# 📁 my-project         │ /path/to/project  │   890 files │ 3h ago
+```
+
+### Future Optimizations
+
+Each vault type may have optimized settings applied:
+- **Obsidian**: Focus on `**/*.md`, exclude `.obsidian/`, `.trash/`
+- **Logseq**: Focus on `pages/**/*.md`, `journals/**/*.md`
+- **Dendron**: Handle hierarchical naming conventions
 
 ## Configuration Import/Export
 

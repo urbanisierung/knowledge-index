@@ -62,13 +62,25 @@ fn render_empty_state(frame: &mut Frame, app: &App, area: Rect) {
             )),
         ]
     } else {
-        vec![
+        let mut lines = vec![
             Line::from(""),
             Line::from(Span::styled(
                 "Start typing to search...",
                 Style::default().fg(Color::DarkGray),
             )),
             Line::from(""),
+        ];
+
+        // Show search history hint if we have history
+        if !app.search_history.is_empty() {
+            lines.push(Line::from(Span::styled(
+                "↑/↓ Browse search history",
+                Style::default().fg(Color::Blue),
+            )));
+            lines.push(Line::from(""));
+        }
+
+        lines.extend([
             Line::from(Span::styled(
                 "Examples:",
                 Style::default().fg(Color::DarkGray),
@@ -85,7 +97,9 @@ fn render_empty_state(frame: &mut Frame, app: &App, area: Rect) {
                 "  func*             - prefix matching",
                 Style::default().fg(Color::DarkGray),
             )),
-        ]
+        ]);
+
+        lines
     };
 
     let paragraph =

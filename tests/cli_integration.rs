@@ -35,18 +35,15 @@ fn create_test_repo() -> tempfile::TempDir {
     fs::write(
         tmp.path().join("README.md"),
         "# Test Project\n\nThis is a test project.",
-    )
-    .unwrap();
+    ).unwrap();
     fs::write(
         tmp.path().join("main.rs"),
         "fn main() {\n    println!(\"Hello\");\n}",
-    )
-    .unwrap();
+    ).unwrap();
     fs::write(
         tmp.path().join("lib.rs"),
         "pub fn greet(name: &str) -> String {\n    format!(\"Hello, {name}!\")\n}",
-    )
-    .unwrap();
+    ).unwrap();
 
     // Create a subdirectory
     let src_dir = tmp.path().join("src");
@@ -54,8 +51,7 @@ fn create_test_repo() -> tempfile::TempDir {
     fs::write(
         src_dir.join("utils.rs"),
         "pub fn helper() -> i32 {\n    42\n}",
-    )
-    .unwrap();
+    ).unwrap();
 
     // Create a markdown file with frontmatter
     fs::write(
@@ -73,18 +69,16 @@ Some [[wiki-link]] content here.
 
 More content.
 ",
-    )
-    .unwrap();
+    ).unwrap();
 
     tmp
 }
 
 #[test]
 fn test_cli_help() {
-    let output = Command::new(binary_path())
-        .arg("--help")
-        .output()
-        .expect("Failed to run binary");
+    let output = Command::new(binary_path()).arg("--help").output().expect(
+        "Failed to run binary",
+    );
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
