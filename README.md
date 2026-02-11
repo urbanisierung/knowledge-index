@@ -72,8 +72,8 @@ kdex index .
 # Add a GitHub repo
 kdex add --remote owner/repo
 
-# Search
-kdex search "authentication"
+# Search (just type your query!)
+kdex "authentication"
 
 # Launch interactive mode
 kdex

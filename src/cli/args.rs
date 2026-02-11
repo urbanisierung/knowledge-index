@@ -10,17 +10,18 @@ use std::path::PathBuf;
 )]
 #[command(after_help = "Examples:
   kdex                     Launch interactive TUI
+  kdex \"async fn\"          Search for async functions (default)
+  kdex TODO --type markdown Search TODOs in markdown files
   kdex index .             Index current directory
-  kdex index ~/notes       Index Obsidian vault
   kdex add --remote owner/repo   Add remote GitHub repo
-  kdex search \"async fn\"   Search for async functions
-  kdex search \"TODO\" --type markdown
   kdex list                List all indexed repositories
 
+The default command is 'search' - just type your query directly:
+  kdex \"my query\"    →    kdex search \"my query\"
+
 Shell Aliases (add to ~/.bashrc or ~/.zshrc):
-  alias ki='kdex'
-  alias kis='kdex search'
-  alias kii='kdex index .'
+  alias k='kdex'
+  alias kx='kdex'
 ")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
@@ -99,36 +100,40 @@ pub enum Commands {
     #[command(after_help = "Examples:
   kdex search \"database connection\"
   kdex search \"async fn\" --repo api-service
-  kdex search \"TODO\" --type markdown
+  kdex search \"TODO\" --file-type markdown
   kdex search \"error handling\" --semantic
   kdex search \"authentication\" --hybrid
+
+Or use the shorthand (search is the default command):
+  kdex \"database connection\"
+  kdex TODO -t markdown
 ")]
     Search {
         /// Search query (supports phrases and wildcards)
         query: String,
 
         /// Filter by repository name
-        #[arg(long)]
+        #[arg(long, short)]
         repo: Option<String>,
 
         /// Filter by file type (code, markdown, config)
-        #[arg(long, name = "type")]
+        #[arg(long, short = 't')]
         file_type: Option<String>,
 
         /// Maximum number of results
-        #[arg(long, default_value = "20")]
+        #[arg(long, short, default_value = "20")]
         limit: usize,
 
         /// Group results by repository
-        #[arg(long)]
+        #[arg(long, short = 'g')]
         group_by_repo: bool,
 
         /// Use semantic (vector) search
-        #[arg(long, conflicts_with_all = ["hybrid", "lexical"])]
+        #[arg(long, short = 's', conflicts_with_all = ["hybrid", "lexical"])]
         semantic: bool,
 
         /// Use hybrid search (combines lexical + semantic)
-        #[arg(long, conflicts_with_all = ["semantic", "lexical"])]
+        #[arg(long, short = 'H', conflicts_with_all = ["semantic", "lexical"])]
         hybrid: bool,
 
         /// Use lexical (full-text) search (default)

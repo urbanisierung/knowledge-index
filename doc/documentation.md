@@ -87,28 +87,33 @@ kdex index ~/notes --name obsidian-vault
 Options:
 - `--name <NAME>` - Custom name for the repository
 
-### `search`
+### `search` (default command)
 
-Search indexed content.
+Search indexed content. This is the default command, so you can omit `search`:
 
 ```bash
+# Full syntax
 kdex search <QUERY> [OPTIONS]
 
+# Shorthand (search is the default)
+kdex <QUERY> [OPTIONS]
+
 # Examples
-kdex search "async fn"
-kdex search "database connection" --repo api-service
-kdex search "TODO" --type markdown
-kdex search "config" --limit 50
-kdex search "authentication logic" --semantic
-kdex search "error handling" --hybrid
+kdex "async fn"                          # Search (shorthand)
+kdex "database connection" -r api-service # Filter by repo
+kdex TODO -t markdown                     # Filter by file type
+kdex "config" -l 50                       # Limit results
+kdex "authentication" -s                  # Semantic search
+kdex "error handling" -H                  # Hybrid search
 ```
 
 Options:
-- `--repo <NAME>` - Filter by repository name
-- `--type <TYPE>` - Filter by file type (rust, python, markdown, etc.)
-- `--limit <N>` - Maximum results (default: 20)
-- `--semantic` - Use vector/embedding search (requires `enable_semantic_search = true`)
-- `--hybrid` - Combine lexical + semantic search with RRF fusion
+- `-r, --repo <NAME>` - Filter by repository name
+- `-t, --file-type <TYPE>` - Filter by file type (rust, python, markdown, etc.)
+- `-l, --limit <N>` - Maximum results (default: 20)
+- `-g, --group-by-repo` - Group results by repository
+- `-s, --semantic` - Use vector/embedding search (requires `enable_semantic_search = true`)
+- `-H, --hybrid` - Combine lexical + semantic search with RRF fusion
 - `--lexical` - Use full-text search only (default)
 
 ### `list`

@@ -68,6 +68,8 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **Config Import** | Import configuration with merge support | 2026-02-09 |
 | **Shallow Clone** | Optional shallow clone for faster setup | 2026-02-09 |
 | **Remote Cleanup** | Auto-delete cloned repos when removed from index | 2026-02-09 |
+| **Default Search** | Search without typing `search` - just `kdex "query"` | 2026-02-11 |
+| **Short Flags** | `-r`, `-t`, `-l`, `-s`, `-H`, `-g` for faster searching | 2026-02-11 |
 
 ## Planned Features
 

@@ -2,6 +2,14 @@
 
 ## Changelog
 
+### 2026-02-11
+
+- **Default Search Command**
+  - Search is now the default command: `kdex "query"` works without typing `search`
+  - Added short flags for search: `-r` (repo), `-t` (file-type), `-l` (limit), `-s` (semantic), `-H` (hybrid), `-g` (group-by-repo)
+  - Argument rewriting detects if first arg is not a known command and treats it as a search query
+  - Updated help text and documentation
+
 ### 2026-02-10
 
 - **Implemented Phase 13: Remote Repositories & Configuration Portability**

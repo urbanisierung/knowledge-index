@@ -12,11 +12,29 @@ use cli::args::{Args, Commands};
 use cli::commands;
 use error::Result;
 
-fn main() {
-    let args = Args::parse();
+/// Known subcommands - if first arg doesn't match, treat as search query
+const KNOWN_COMMANDS: &[&str] = &[
+    "index",
+    "add",
+    "search",
+    "update",
+    "sync",
+    "list",
+    "remove",
+    "config",
+    "mcp",
+    "watch",
+    "rebuild-embeddings",
+    "help",
+];
 
-    if let Err(e) = run_with_args(&args) {
-        if args.debug {
+fn main() {
+    // Rewrite args: if first positional isn't a known command, assume it's a search query
+    let args = rewrite_args_for_default_search();
+    let parsed = Args::parse_from(args);
+
+    if let Err(e) = run_with_args(&parsed) {
+        if parsed.debug {
             eprintln!("Error: {e:?}");
         } else {
             eprintln!("Error: {e}");
@@ -24,6 +42,43 @@ fn main() {
         }
         std::process::exit(1);
     }
+}
+
+/// Rewrite command-line arguments to make "search" the default command.
+/// If the first positional argument is not a known subcommand, insert "search".
+///
+/// Examples:
+///   `kdex "my query"` → `kdex search "my query"`
+///   `kdex auth --semantic` → `kdex search auth --semantic`
+///   `kdex list` → `kdex list` (unchanged)
+///   `kdex --help` → `kdex --help` (unchanged)
+fn rewrite_args_for_default_search() -> Vec<String> {
+    let args: Vec<String> = std::env::args().collect();
+
+    // Need at least 2 args (program name + something)
+    if args.len() < 2 {
+        return args;
+    }
+
+    let first_arg = &args[1];
+
+    // Don't rewrite if it's a flag (starts with -)
+    if first_arg.starts_with('-') {
+        return args;
+    }
+
+    // Don't rewrite if it's a known command
+    if KNOWN_COMMANDS.contains(&first_arg.as_str()) {
+        return args;
+    }
+
+    // Insert "search" as the command
+    let mut new_args = Vec::with_capacity(args.len() + 1);
+    new_args.push(args[0].clone()); // program name
+    new_args.push("search".to_string()); // insert search command
+    new_args.extend(args[1..].iter().cloned()); // rest of args become search args
+
+    new_args
 }
 
 fn run_with_args(args: &Args) -> Result<()> {
