@@ -4,6 +4,15 @@
 
 ### 2026-02-11
 
+- **Fixed crates.io publish workflow**
+  - Extract version from release tag (e.g., `v0.0.4` -> `0.0.4`)
+  - Update Cargo.toml and Cargo.lock version before publishing
+  - Commit version update back to main branch after successful publish
+  - Use `--allow-dirty` flag since version is modified at publish time
+
+- **Fixed CI formatting issues**
+  - Applied Docker-based rustfmt to fix formatting across 10 files
+
 - **Documentation & Landing Page Update**
   - Added Gemini CLI integration example to MCP documentation
   - Added full documentation section to landing page with all commands and options
