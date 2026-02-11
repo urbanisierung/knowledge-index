@@ -3,6 +3,8 @@ mod backlinks_cmd;
 mod completions_cmd;
 mod config_cmd;
 mod context_cmd;
+mod graph_cmd;
+mod health_cmd;
 mod index_cmd;
 mod list_cmd;
 mod rebuild_embeddings_cmd;
@@ -21,6 +23,12 @@ pub mod backlinks {
 }
 pub mod completions {
     pub use super::completions_cmd::run;
+}
+pub mod graph {
+    pub use super::graph_cmd::run;
+}
+pub mod health {
+    pub use super::health_cmd::run;
 }
 pub mod index {
     pub use super::index_cmd::run;

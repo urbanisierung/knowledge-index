@@ -4,6 +4,13 @@
 
 ### 2026-02-11
 
+- **Implemented Phase 14 Features: Graph Visualization & Health Diagnostics**
+  - Added `graph` command exporting DOT format for Graphviz visualization
+  - Added `graph --json` for JSON output (web visualization tools)
+  - Added `health` command with orphan detection and broken link checking
+  - Health score (0-100) based on link quality and file connectivity
+  - Added `get_all_links()`, `get_all_file_paths()`, `get_orphan_files()` methods
+
 - **Implemented Phase 14 Features: Knowledge Statistics & Data Storage**
   - Added `stats` command showing file counts, tags, links, embeddings, and storage
   - Modified indexer to store tags and wiki-links in dedicated database tables

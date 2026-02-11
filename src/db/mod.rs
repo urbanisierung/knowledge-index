@@ -1252,6 +1252,143 @@ impl Database {
             database_size_bytes: db_size,
         })
     }
+
+    /// Get all links for graph visualization.
+    /// Returns vector of `GraphLink` structs.
+    pub fn get_all_links(&self, repo_filter: Option<&str>) -> Result<Vec<GraphLink>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let query = if repo_filter.is_some() {
+            r"
+            SELECT f.relative_path, r.name, l.target_name
+            FROM links l
+            JOIN files f ON l.source_file_id = f.id
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE r.name = ?1
+            ORDER BY f.relative_path
+            "
+        } else {
+            r"
+            SELECT f.relative_path, r.name, l.target_name
+            FROM links l
+            JOIN files f ON l.source_file_id = f.id
+            JOIN repositories r ON f.repo_id = r.id
+            ORDER BY r.name, f.relative_path
+            "
+        };
+
+        let mut stmt = conn.prepare(query)?;
+
+        let links = if let Some(repo) = repo_filter {
+            stmt.query_map([repo], |row| {
+                Ok(GraphLink {
+                    source_path: row.get(0)?,
+                    source_repo: row.get(1)?,
+                    target_name: row.get(2)?,
+                })
+            })?
+            .filter_map(std::result::Result::ok)
+            .collect()
+        } else {
+            stmt.query_map([], |row| {
+                Ok(GraphLink {
+                    source_path: row.get(0)?,
+                    source_repo: row.get(1)?,
+                    target_name: row.get(2)?,
+                })
+            })?
+            .filter_map(std::result::Result::ok)
+            .collect()
+        };
+
+        Ok(links)
+    }
+
+    /// Get all indexed file paths for health checks
+    pub fn get_all_file_paths(&self) -> Result<Vec<(String, String)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let mut stmt = conn.prepare(
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            ORDER BY r.name, f.relative_path
+            ",
+        )?;
+
+        let paths = stmt
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .filter_map(std::result::Result::ok)
+            .collect();
+
+        Ok(paths)
+    }
+
+    /// Get files with no incoming links (orphans)
+    pub fn get_orphan_files(&self, repo_filter: Option<&str>) -> Result<Vec<(String, String)>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let query = if repo_filter.is_some() {
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE r.name = ?1
+              AND f.file_type = 'markdown'
+              AND NOT EXISTS (
+                SELECT 1 FROM links l
+                WHERE l.target_name = f.relative_path
+                   OR f.relative_path LIKE '%' || l.target_name || '%'
+              )
+            ORDER BY f.relative_path
+            "
+        } else {
+            r"
+            SELECT f.relative_path, r.name
+            FROM files f
+            JOIN repositories r ON f.repo_id = r.id
+            WHERE f.file_type = 'markdown'
+              AND NOT EXISTS (
+                SELECT 1 FROM links l
+                WHERE l.target_name = f.relative_path
+                   OR f.relative_path LIKE '%' || l.target_name || '%'
+              )
+            ORDER BY r.name, f.relative_path
+            "
+        };
+
+        let mut stmt = conn.prepare(query)?;
+
+        let orphans = if let Some(repo) = repo_filter {
+            stmt.query_map([repo], |row| Ok((row.get(0)?, row.get(1)?)))?
+                .filter_map(std::result::Result::ok)
+                .collect()
+        } else {
+            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                .filter_map(std::result::Result::ok)
+                .collect()
+        };
+
+        Ok(orphans)
+    }
+}
+
+/// Link for graph visualization
+#[derive(Debug, Clone)]
+pub struct GraphLink {
+    pub source_path: String,
+    pub source_repo: String,
+    pub target_name: String,
 }
 
 /// Knowledge statistics

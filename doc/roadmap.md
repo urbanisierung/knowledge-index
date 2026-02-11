@@ -1860,16 +1860,16 @@ Enable Obsidian-style knowledge exploration.
   - [x] Parse YAML frontmatter for `tags:` field
   - [x] Support both array and comma-separated formats
   - [x] Store in tags table for efficient queries
-- [ ] Graph visualization:
-  - [ ] `kdex graph` exports DOT format for Graphviz
-  - [ ] `kdex graph --json` for web visualization tools
-  - [ ] Option to filter by repo or tag
+- [x] Graph visualization:
+  - [x] `kdex graph` exports DOT format for Graphviz
+  - [x] `kdex graph --json` for web visualization tools
+  - [x] Option to filter by repo or tag
 - [ ] Daily notes support:
   - [ ] Recognize date patterns in filenames (YYYY-MM-DD, etc.)
   - [ ] `--date-range` filter for search
-- [ ] Orphan and broken link detection:
-  - [ ] `kdex health` command reports orphan notes
-  - [ ] List broken `[[links]]` pointing to non-existent files
+- [x] Orphan and broken link detection:
+  - [x] `kdex health` command reports orphan notes
+  - [x] List broken `[[links]]` pointing to non-existent files
 
 ### Part 14.3: Repository & Vault Features
 

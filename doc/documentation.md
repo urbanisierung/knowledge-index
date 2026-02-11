@@ -446,3 +446,44 @@ The stats command displays:
 - **Knowledge Graph**: Count of tags and wiki-links
 - **Semantic Search**: Embeddings coverage percentage
 - **Storage**: Database size on disk
+
+## Graph Visualization
+
+Export your knowledge graph for visualization:
+
+```bash
+# Output DOT format (for Graphviz)
+kdex graph > knowledge.dot
+dot -Tpng knowledge.dot -o knowledge.png
+
+# Output JSON for web visualization tools
+kdex graph --json > knowledge.json
+
+# Graph only one repository
+kdex graph --repo myproject
+```
+
+The graph shows:
+- **Nodes**: Each file in your knowledge base
+- **Edges**: Wiki-links between files (`[[link]]`)
+- **Clusters**: Files grouped by repository
+
+## Health Diagnostics
+
+Check the health of your knowledge index:
+
+```bash
+# Run health check
+kdex health
+
+# Check specific repository
+kdex health --repo myproject
+
+# Output as JSON
+kdex health --json
+```
+
+The health command detects:
+- **Broken Links**: Wiki-links pointing to non-existent files
+- **Orphan Files**: Markdown files with no incoming links
+- **Health Score**: 0-100 score based on link quality

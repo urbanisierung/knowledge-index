@@ -78,6 +78,8 @@ kdex indexes your code, docs, notes, and wikis locally, making everything search
 | **Context Builder** | Build AI prompts from search results with token limits | 2026-02-11 |
 | **Knowledge Statistics** | View index stats (files, repos, tags, links, storage) | 2026-02-11 |
 | **Tags/Links Indexing** | Store tags and wiki-links during indexing for backlinks | 2026-02-11 |
+| **Graph Visualization** | Export knowledge graph in DOT (Graphviz) or JSON format | 2026-02-11 |
+| **Health Diagnostics** | Find orphan files, broken links, and health score | 2026-02-11 |
 
 ## Planned Features
 

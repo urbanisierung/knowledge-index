@@ -288,6 +288,35 @@ Or use the shorthand (search is the default command):
 
     /// Show knowledge index statistics
     Stats {},
+
+    /// Export knowledge graph visualization
+    #[command(after_help = "Examples:
+  kdex graph                    Output DOT format (for Graphviz)
+  kdex graph --json             Output JSON for web visualization
+  kdex graph --repo myproject   Graph only one repository
+  kdex graph > graph.dot && dot -Tpng graph.dot -o graph.png
+")]
+    Graph {
+        /// Output format (dot, json)
+        #[arg(long, default_value = "dot")]
+        format: String,
+
+        /// Filter by repository name
+        #[arg(long, short)]
+        repo: Option<String>,
+    },
+
+    /// Check knowledge index health
+    #[command(after_help = "Examples:
+  kdex health                   Run all health checks
+  kdex health --repo myproject  Check specific repository
+  kdex health --json            Output as JSON
+")]
+    Health {
+        /// Filter by repository name
+        #[arg(long, short)]
+        repo: Option<String>,
+    },
 }
 
 /// Shell type for completions

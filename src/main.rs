@@ -30,6 +30,8 @@ const KNOWN_COMMANDS: &[&str] = &[
     "tags",
     "context",
     "stats",
+    "graph",
+    "health",
     "help",
 ];
 
@@ -176,6 +178,8 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
             format,
         } => commands::context::run(&query, limit, tokens, &format, args),
         Commands::Stats {} => commands::stats::run(args),
+        Commands::Graph { format, repo } => commands::graph::run(&format, repo.as_deref(), args),
+        Commands::Health { repo } => commands::health::run(repo.as_deref(), args),
     }
 }
 
