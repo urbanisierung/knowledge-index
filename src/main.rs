@@ -16,6 +16,7 @@ use error::Result;
 const KNOWN_COMMANDS: &[&str] = &[
     "index",
     "add",
+    "add-mcp",
     "search",
     "update",
     "sync",
@@ -32,6 +33,7 @@ const KNOWN_COMMANDS: &[&str] = &[
     "stats",
     "graph",
     "health",
+    "self-update",
     "help",
 ];
 
@@ -180,6 +182,8 @@ fn run_command(cmd: Commands, args: &Args) -> Result<()> {
         Commands::Stats {} => commands::stats::run(args),
         Commands::Graph { format, repo } => commands::graph::run(&format, repo.as_deref(), args),
         Commands::Health { repo } => commands::health::run(repo.as_deref(), args),
+        Commands::AddMcp { tool } => commands::add_mcp::run(tool, args.json),
+        Commands::SelfUpdate => commands::self_update::run(args.json),
     }
 }
 

@@ -1,4 +1,5 @@
 mod add_cmd;
+mod add_mcp_cmd;
 mod backlinks_cmd;
 mod completions_cmd;
 mod config_cmd;
@@ -10,6 +11,7 @@ mod list_cmd;
 mod rebuild_embeddings_cmd;
 mod remove_cmd;
 mod search_cmd;
+mod self_update_cmd;
 mod stats_cmd;
 mod sync_cmd;
 mod tags_cmd;
@@ -17,6 +19,9 @@ mod update_cmd;
 
 pub mod add {
     pub use super::add_cmd::run;
+}
+pub mod add_mcp {
+    pub use super::add_mcp_cmd::run;
 }
 pub mod backlinks {
     pub use super::backlinks_cmd::run;
@@ -64,6 +69,9 @@ pub mod tags {
 }
 pub mod rebuild_embeddings {
     pub use super::rebuild_embeddings_cmd::run;
+}
+pub mod self_update {
+    pub use super::self_update_cmd::run;
 }
 
 use owo_colors::OwoColorize;

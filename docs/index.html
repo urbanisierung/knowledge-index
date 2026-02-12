@@ -90,10 +90,22 @@
       border-radius: 8px;
       padding: 0.75rem 1.25rem;
       font-family: var(--mono);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
     .install-box .prompt { color: var(--green); }
     .install-box .cmd { color: var(--text); }
+    .install-alt {
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .install-alt code {
+      background: var(--bg-alt);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .install-alt a { color: var(--accent); }
     .cta-row {
       margin-top: 1.5rem;
       display: flex;
@@ -256,8 +268,9 @@
       </p>
       <div class="install-box">
         <span class="prompt">$</span>
-        <span class="cmd">cargo install kdex</span>
+        <span class="cmd">curl -sSf https://urbanisierung.github.io/kdex/install.sh | sh</span>
       </div>
+      <p class="install-alt">or <code>cargo install kdex</code> · <a href="#installation">more options</a></p>
       <div class="cta-row">
         <a href="https://github.com/urbanisierung/kdex" class="btn btn-primary">View on GitHub</a>
         <a href="#docs" class="btn btn-secondary">Documentation</a>
@@ -361,9 +374,22 @@ kdex add --remote owner/repo  # Index a GitHub repo</pre>
     <section id="docs" class="docs">
       <h2><span class="icon">📖</span> Documentation</h2>
       
-      <h3>Installation</h3>
+      <h3 id="installation">Installation</h3>
+      
+      <h4>Quick Install (recommended)</h4>
+      <pre>curl -sSf https://urbanisierung.github.io/kdex/install.sh | sh</pre>
+      <p style="color: var(--text-muted); margin: 0.5rem 0 1rem;">Downloads the latest binary to <code>~/.local/bin</code>. No Rust required. To update, re-run the same command.</p>
+      
+      <h4>From crates.io</h4>
       <pre>cargo install kdex</pre>
-      <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem;">Or build from source: <code>cargo build --release</code></p>
+      
+      <h4>From source</h4>
+      <pre>git clone https://github.com/urbanisierung/kdex.git
+cd kdex
+cargo install --path .</pre>
+      
+      <h4>Pre-built binaries</h4>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Download from <a href="https://github.com/urbanisierung/kdex/releases">GitHub Releases</a> for Linux, macOS, and Windows.</p>
 
       <h3>App Mode (TUI)</h3>
       <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Launch the full-screen interactive interface:</p>
@@ -469,6 +495,16 @@ kdex graph --json > graph.json   # JSON format</pre>
       <p style="color: var(--text-muted);">Start MCP server for AI assistants</p>
       <pre>kdex mcp</pre>
 
+      <h4>add-mcp</h4>
+      <p style="color: var(--text-muted);">Automatically configure MCP for AI tools</p>
+      <pre>kdex add-mcp copilot    # Configure GitHub Copilot CLI
+kdex add-mcp gemini     # Configure Gemini CLI
+kdex add-mcp claude     # Configure Claude Desktop</pre>
+
+      <h4>self-update</h4>
+      <p style="color: var(--text-muted);">Update kdex (script-based installs only)</p>
+      <pre>kdex self-update</pre>
+
       <h4>config</h4>
       <p style="color: var(--text-muted);">Manage configuration</p>
       <pre>kdex config show              # Show current config
@@ -482,10 +518,10 @@ kdex completions zsh >> ~/.zshrc
 kdex completions fish > ~/.config/fish/completions/kdex.fish</pre>
 
       <h3>MCP Integration</h3>
-      <p style="color: var(--text-muted); margin-bottom: 1rem;">Connect kdex to AI assistants via the Model Context Protocol.</p>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">Connect kdex to AI assistants via the Model Context Protocol. Use <code>kdex add-mcp &lt;tool&gt;</code> to auto-configure, or manually add:</p>
       
       <h4>Claude Desktop</h4>
-      <p style="color: var(--text-muted);">Add to <code>~/.config/claude/claude_desktop_config.json</code>:</p>
+      <p style="color: var(--text-muted);"><code>kdex add-mcp claude</code> or add to <code>~/.config/claude/claude_desktop_config.json</code>:</p>
       <pre>{
   "mcpServers": {
     "kdex": { "command": "kdex", "args": ["mcp"] }
@@ -493,7 +529,7 @@ kdex completions fish > ~/.config/fish/completions/kdex.fish</pre>
 }</pre>
 
       <h4>GitHub Copilot CLI</h4>
-      <p style="color: var(--text-muted);">Add to <code>~/.config/github-copilot/mcp.json</code>:</p>
+      <p style="color: var(--text-muted);"><code>kdex add-mcp copilot</code> or add to <code>~/.config/github-copilot/mcp.json</code>:</p>
       <pre>{
   "mcpServers": {
     "kdex": { "command": "kdex", "args": ["mcp"] }
@@ -501,7 +537,7 @@ kdex completions fish > ~/.config/fish/completions/kdex.fish</pre>
 }</pre>
 
       <h4>Gemini CLI</h4>
-      <p style="color: var(--text-muted);">Add to <code>~/.gemini/settings.json</code>:</p>
+      <p style="color: var(--text-muted);"><code>kdex add-mcp gemini</code> or add to <code>~/.gemini/settings.json</code>:</p>
       <pre>{
   "mcpServers": {
     "kdex": { "command": "kdex", "args": ["mcp"], "timeout": 30000 }

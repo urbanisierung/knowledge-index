@@ -317,6 +317,40 @@ Or use the shorthand (search is the default command):
         #[arg(long, short)]
         repo: Option<String>,
     },
+
+    /// Configure MCP integration for AI tools
+    #[command(after_help = "Examples:
+  kdex add-mcp copilot    Configure GitHub Copilot CLI
+  kdex add-mcp gemini     Configure Gemini CLI
+  kdex add-mcp claude     Configure Claude Desktop
+
+Supported tools: copilot, gemini, claude
+")]
+    AddMcp {
+        /// AI tool to configure (copilot, gemini, claude)
+        tool: McpTool,
+    },
+
+    /// Update kdex to the latest version
+    #[command(after_help = "Re-runs the install script to update kdex.
+Only works if kdex was installed via the install script.
+
+For other installation methods:
+  cargo install kdex      # If installed via cargo
+  Download from GitHub    # For manual binary installs
+")]
+    SelfUpdate,
+}
+
+/// AI tool for MCP configuration
+#[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
+pub enum McpTool {
+    /// GitHub Copilot CLI
+    Copilot,
+    /// Gemini CLI
+    Gemini,
+    /// Claude Desktop
+    Claude,
 }
 
 /// Shell type for completions

@@ -2,15 +2,33 @@
 
 ## Installation
 
+### Quick Install (recommended)
+
 ```bash
+curl -sSf https://urbanisierung.github.io/kdex/install.sh | sh
+```
+
+Downloads the latest binary to `~/.local/bin`. No Rust required.
+
+To update, re-run the same command, or use `kdex self-update`.
+
+### From crates.io
+
+```bash
+cargo install kdex
+```
+
+### From source
+
+```bash
+git clone https://github.com/urbanisierung/kdex.git
+cd kdex
 cargo install --path .
 ```
 
-Or build from source:
-```bash
-cargo build --release
-# Binary will be at ./target/release/kdex
-```
+### Pre-built binaries
+
+Download from [GitHub Releases](https://github.com/urbanisierung/kdex/releases) for Linux, macOS, and Windows.
 
 ## Quick Start
 
@@ -169,6 +187,28 @@ kdex mcp
 ```
 
 The MCP server allows AI tools like GitHub Copilot CLI, Claude Desktop, or other MCP-compatible clients to search and retrieve content from your indexed repositories. See [MCP Integration Guide](mcp-integration.md) for detailed setup instructions.
+
+### `add-mcp`
+
+Automatically configure MCP integration for AI tools.
+
+```bash
+kdex add-mcp copilot    # Configure GitHub Copilot CLI
+kdex add-mcp gemini     # Configure Gemini CLI
+kdex add-mcp claude     # Configure Claude Desktop
+```
+
+This creates or updates the tool's configuration file with the kdex MCP server settings.
+
+### `self-update`
+
+Update kdex to the latest version (only for script-based installations).
+
+```bash
+kdex self-update
+```
+
+This re-runs the install script to download and install the latest version. Only available when kdex was installed via the install script. For other installation methods, use `cargo install kdex` or download from GitHub Releases.
 
 ## Configuration
 

@@ -169,7 +169,17 @@ Run `kdex --help` for all options.
 
 ## 🔧 Installation
 
-### From crates.io (recommended)
+### Quick Install (recommended)
+
+```bash
+curl -sSf https://urbanisierung.github.io/kdex/install.sh | sh
+```
+
+This downloads the latest binary and installs it to `~/.local/bin`. No Rust required.
+
+To update, re-run the same command.
+
+### From crates.io
 
 ```bash
 cargo install kdex
@@ -183,10 +193,14 @@ cd kdex
 cargo install --path .
 ```
 
+### Pre-built binaries
+
+Download from [GitHub Releases](https://github.com/urbanisierung/kdex/releases).
+
 ### Requirements
 
-- Rust 1.88+ ([install via rustup](https://rustup.rs/))
-- Works on Linux, macOS (Apple Silicon), and Windows
+- Linux or macOS (Windows: use cargo install or pre-built binaries)
+- For building from source: Rust 1.88+ ([install via rustup](https://rustup.rs/))
 
 ---
 
