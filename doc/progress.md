@@ -2,6 +2,12 @@
 
 ## Changelog
 
+### 2026-02-12
+
+- **Fixed Cargo.lock tracking**
+  - Removed Cargo.lock from .gitignore (should be tracked for binary applications)
+  - Enables release workflow to commit version updates properly
+
 ### 2026-02-11
 
 - **Fixed crates.io publish workflow**
