@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="docs/logo.svg" alt="kdex logo" width="120" height="120">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/rust-1.88+-orange?logo=rust" alt="Rust 1.88+">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
   <img src="https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey" alt="Platform">

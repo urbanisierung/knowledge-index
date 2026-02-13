@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>kdex — All your knowledge. One search. AI-ready.</title>
   <meta name="description" content="Index your code, docs, notes, and wikis locally. Let AI assistants search everything you know.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 1000 1000' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M72 140c0-38 30-68 68-68h720c38 0 68 30 68 68v720c0 38-30 68-68 68H140c-38 0-68-30-68-68z'/%3E%3Cpath fill='%23f0f' d='M288 358c0-39 32-71 71-71h282c39 0 71 32 71 71v284c0 39-32 71-71 71H359c-39 0-71-32-71-71z'/%3E%3C/svg%3E">
   <style>
     :root {
       --bg: #0d1117;
@@ -91,9 +92,20 @@
       padding: 0.75rem 1.25rem;
       font-family: var(--mono);
       font-size: 0.9rem;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    .install-box .prompt { color: var(--green); }
-    .install-box .cmd { color: var(--text); }
+    .install-box::-webkit-scrollbar { display: none; }
+    .install-box .prompt { color: var(--green); flex-shrink: 0; }
+    .install-box .cmd { color: var(--text); white-space: nowrap; }
+    pre, code {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    pre::-webkit-scrollbar, code::-webkit-scrollbar { display: none; }
     .install-alt {
       margin-top: 0.75rem;
       font-size: 0.9rem;
