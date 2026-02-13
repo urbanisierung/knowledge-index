@@ -47,6 +47,10 @@ kdex mcp  # Start MCP server for Copilot, Claude, Ollama
 
 **kdex** creates a local search index that AI tools can query. Your data never leaves your machine.
 
+<p align="center">
+  <img src="scripts/demo.gif" alt="kdex demo" width="800">
+</p>
+
 ---
 
 ## ✨ Features
